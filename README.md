@@ -47,8 +47,39 @@ Centers are unlabeled and not part of drills. Letter mappings live in `src/lib/s
 - Interactive 3D cube (orbit controls, reset view, optional letter overlay)
 - Filters: all stickers, edges only, corners only
 - 60-second timed mode with end-of-round summary
-- Stats: streak, accuracy, weak letters, response times
-- Responsive dashboard layout (desktop & tablet)
+- Stats: streak, accuracy, weak letters (recency-weighted), weak faces, response times
+- Session vs all-time stats scope; “needs practice” badges; practice weak letters action
+- Settings panel: **Learning mode** (letters visible) vs **Test mode** (letters hidden)
+- Keyboard shortcuts with collapsible legend (press `?`)
+- Responsive layout: cube stacks above panel on mobile, 44px tap targets
+
+## Settings
+
+Open **Settings** (gear icon) to choose the default letter display mode:
+
+| Mode | Behavior |
+|------|----------|
+| **Learning** | Letters shown on cube stickers — helpful while memorizing |
+| **Test** | Letters hidden on stickers — default for real training (stored in `blind-cube-letter-trainer-settings`) |
+
+The header **Show Letters (L)** toggle temporarily overrides the setting for the current browser session. Face drill answer keys still appear after you submit — settings only affect cube sticker labels during prompts.
+
+## Keyboard shortcuts
+
+| Key | Action |
+|-----|--------|
+| `1` / `F1` | Find the Letter mode |
+| `2` / `F2` | Name the Sticker mode |
+| `3` / `F3` | Face Drill mode |
+| `Enter` | Submit letter (name mode) |
+| `R` | Reset cube view |
+| `N` | New round |
+| `L` | Toggle show/hide letters (session override) |
+| `T` | Toggle 60s timed mode |
+| `Esc` | Dismiss timed summary / clear focus |
+| `?` | Toggle shortcut legend |
+
+Press `?` or use the footer hint to show the full legend in the app.
 
 ## Run locally
 
