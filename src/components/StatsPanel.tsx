@@ -82,7 +82,7 @@ export default function StatsPanel({
           Performance
         </h2>
         <div
-          role="tablist"
+          role="group"
           aria-label="Stats scope"
           className="inline-flex rounded-xl border border-line bg-surface-0/70 p-1"
         >
@@ -90,8 +90,7 @@ export default function StatsPanel({
             <button
               key={s}
               type="button"
-              role="tab"
-              aria-selected={scope === s}
+              aria-pressed={scope === s}
               onClick={() => setScope(s)}
               className={`min-h-11 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                 scope === s

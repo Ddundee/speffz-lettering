@@ -50,7 +50,7 @@ interface ModeSelectorProps {
 export default function ModeSelector({ mode, onChange }: ModeSelectorProps) {
   return (
     <div
-      role="tablist"
+      role="group"
       aria-label="Training mode"
       className="grid w-full grid-cols-3 gap-1.5 rounded-2xl border border-line bg-surface-0/70 p-1.5 backdrop-blur sm:w-auto sm:gap-2"
     >
@@ -61,8 +61,7 @@ export default function ModeSelector({ mode, onChange }: ModeSelectorProps) {
           <button
             key={m.id}
             type="button"
-            role="tab"
-            aria-selected={active}
+            aria-pressed={active}
             onClick={() => onChange(m.id)}
             title={`${m.label} — press ${m.shortcut}`}
             className={`group relative flex min-h-11 items-center gap-2.5 overflow-hidden rounded-xl px-2.5 py-2 text-left transition-all duration-200 sm:px-3.5 ${

@@ -10,6 +10,22 @@ interface SettingsPanelProps {
   onChange: (settings: TrainerSettings) => void;
 }
 
+const OPTIONS: { value: LetterDisplayMode; title: string; description: string }[] = [
+  {
+    value: "learning",
+    title: "Learning mode",
+    description: "Show letters on stickers — helpful while memorizing.",
+  },
+  {
+    value: "test",
+    title: "Test mode",
+    description: "Hide letters on stickers — default for real training.",
+  },
+];
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export default function SettingsPanel({
   open,
   settings,
@@ -17,7 +33,9 @@ export default function SettingsPanel({
   onChange,
 }: SettingsPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const radioRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
+  // Esc-to-close (kept working independently of focus management).
   useEffect(() => {
     if (!open) return;
     const handleKey = (e: KeyboardEvent) => {
@@ -27,10 +45,73 @@ export default function SettingsPanel({
     return () => window.removeEventListener("keydown", handleKey);
   }, [open, onClose]);
 
+  // Focus management (hand-rolled, no library):
+  // (a) move focus into the panel on open, (b) trap Tab/Shift+Tab within it,
+  // (c) restore focus to the triggering element on close/unmount.
+  useEffect(() => {
+    if (!open) return;
+    const panel = panelRef.current;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    panel?.focus({ preventScroll: true });
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Tab" || !panel) return;
+      const focusables = Array.from(
+        panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      ).filter(
+        (el) =>
+          el.tabIndex !== -1 &&
+          (el.offsetParent !== null || el === document.activeElement),
+      );
+      if (focusables.length === 0) {
+        e.preventDefault();
+        panel.focus({ preventScroll: true });
+        return;
+      }
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || active === panel)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      previouslyFocused?.focus?.();
+    };
+  }, [open]);
+
   if (!open) return null;
 
   const setMode = (letterDisplay: LetterDisplayMode) => {
     onChange({ letterDisplay });
+  };
+
+  const selectedIndex = OPTIONS.findIndex(
+    (o) => o.value === settings.letterDisplay,
+  );
+
+  // Arrow-key selection within the radio group (WAI-ARIA radio pattern).
+  const handleRadioKeyDown = (
+    e: React.KeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) => {
+    let next: number | null = null;
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+      next = (index + 1) % OPTIONS.length;
+    } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+      next = (index - 1 + OPTIONS.length) % OPTIONS.length;
+    }
+    if (next === null) return;
+    e.preventDefault();
+    setMode(OPTIONS[next].value);
+    radioRefs.current[next]?.focus();
   };
 
   return (
@@ -46,7 +127,8 @@ export default function SettingsPanel({
         role="dialog"
         aria-modal="true"
         aria-labelledby="settings-title"
-        className="glass-raised relative z-10 flex h-full w-full max-w-sm translate-x-0 flex-col border-l border-line-strong shadow-2xl animate-fade-in-up"
+        tabIndex={-1}
+        className="glass-raised relative z-10 flex h-full w-full max-w-sm translate-x-0 flex-col border-l border-line-strong shadow-2xl outline-none animate-fade-in-up"
       >
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
           <div className="flex items-center gap-3">
@@ -70,29 +152,36 @@ export default function SettingsPanel({
         </div>
 
         <div className="scroll-slim flex-1 overflow-y-auto px-5 py-6">
-          <fieldset>
-            <legend className="text-xs font-semibold uppercase tracking-[0.14em] text-faint">
-              Letter display default
-            </legend>
-            <p className="mt-2 text-sm leading-relaxed text-muted">
-              Controls whether letters appear on cube stickers during training. The
-              header toggle temporarily overrides this for the current visit.
-            </p>
-            <div className="mt-4 space-y-2.5">
+          <p
+            id="letter-display-label"
+            className="text-xs font-semibold uppercase tracking-[0.14em] text-faint"
+          >
+            Letter display default
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-muted">
+            Controls whether letters appear on cube stickers during training. The
+            header toggle temporarily overrides this for the current visit.
+          </p>
+          <div
+            role="radiogroup"
+            aria-labelledby="letter-display-label"
+            className="mt-4 space-y-2.5"
+          >
+            {OPTIONS.map((o, i) => (
               <ModeOption
-                title="Learning mode"
-                description="Show letters on stickers — helpful while memorizing."
-                selected={settings.letterDisplay === "learning"}
-                onSelect={() => setMode("learning")}
+                key={o.value}
+                ref={(el) => {
+                  radioRefs.current[i] = el;
+                }}
+                title={o.title}
+                description={o.description}
+                selected={settings.letterDisplay === o.value}
+                tabbable={i === (selectedIndex === -1 ? 0 : selectedIndex)}
+                onSelect={() => setMode(o.value)}
+                onKeyDown={(e) => handleRadioKeyDown(e, i)}
               />
-              <ModeOption
-                title="Test mode"
-                description="Hide letters on stickers — default for real training."
-                selected={settings.letterDisplay === "test"}
-                onSelect={() => setMode("test")}
-              />
-            </div>
-          </fieldset>
+            ))}
+          </div>
         </div>
 
         <div className="border-t border-line px-5 py-4 text-xs text-faint">
@@ -104,21 +193,31 @@ export default function SettingsPanel({
 }
 
 function ModeOption({
+  ref,
   title,
   description,
   selected,
+  tabbable,
   onSelect,
+  onKeyDown,
 }: {
+  ref?: React.Ref<HTMLButtonElement>;
   title: string;
   description: string;
   selected: boolean;
+  tabbable: boolean;
   onSelect: () => void;
+  onKeyDown: (e: React.KeyboardEvent<HTMLButtonElement>) => void;
 }) {
   return (
     <button
+      ref={ref}
       type="button"
+      role="radio"
+      aria-checked={selected}
+      tabIndex={tabbable ? 0 : -1}
       onClick={onSelect}
-      aria-pressed={selected}
+      onKeyDown={onKeyDown}
       className={`w-full rounded-xl border p-4 text-left transition-all duration-200 ${
         selected
           ? "border-brand/60 bg-brand/10 shadow-[0_0_0_1px_rgb(45_212_191/0.35)_inset]"

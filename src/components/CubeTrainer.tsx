@@ -238,6 +238,17 @@ export default function CubeTrainer() {
     return () => clearTimeout(id);
   }, [timedMode, timerSeconds, endTimedRound]);
 
+  // Keep the Name-the-Sticker input focused for uninterrupted keyboard-only
+  // practice. The input stays mounted and is only temporarily disabled during
+  // feedback, so refocus it whenever a new prompt re-enables it. Only steal
+  // focus when that input is the active prompt — not in other modes, and not
+  // while the settings drawer or the timed summary is up.
+  useEffect(() => {
+    if (mode !== "name-sticker" || inputLocked) return;
+    if (settingsOpen || timedSummary) return;
+    letterInputRef.current?.focus();
+  }, [mode, inputLocked, settingsOpen, timedSummary, targetSticker?.id]);
+
   const recordAttempt = useCallback(
     (letter: string, correct: boolean) => {
       if (!stats) return;
@@ -599,7 +610,7 @@ export default function CubeTrainer() {
           <ControlButton onClick={() => setResetViewToken((t) => t + 1)} icon="view" hint="R">
             Reset View
           </ControlButton>
-          <ControlButton active={effectiveShowLetters} onClick={handleToggleLetters} icon="eye" hint="L">
+          <ControlButton active={effectiveShowLetters} pressed={effectiveShowLetters} onClick={handleToggleLetters} icon="eye" hint="L">
             {effectiveShowLetters ? "Hide Letters" : "Show Letters"}
             {lettersOverridden && (
               <span className="ml-1 rounded bg-white/10 px-1 text-[10px] font-semibold uppercase tracking-wide opacity-80">
@@ -607,13 +618,13 @@ export default function CubeTrainer() {
               </span>
             )}
           </ControlButton>
-          <ControlButton active={timedMode} onClick={handleToggleTimedMode} icon="timer" hint="T">
+          <ControlButton active={timedMode} pressed={timedMode} onClick={handleToggleTimedMode} icon="timer" hint="T">
             60s Timed
           </ControlButton>
           <ControlButton variant="danger" onClick={handleResetStats} icon="trash">
             Reset Stats
           </ControlButton>
-          <ControlButton onClick={() => setShortcutsOpen((v) => !v)} icon="keyboard" hint="?">
+          <ControlButton pressed={shortcutsOpen} onClick={() => setShortcutsOpen((v) => !v)} icon="keyboard" hint="?">
             Shortcuts
           </ControlButton>
         </div>
@@ -1035,6 +1046,7 @@ function ControlButton({
   variant,
   icon,
   hint,
+  pressed,
 }: {
   children: React.ReactNode;
   onClick: () => void;
@@ -1042,6 +1054,7 @@ function ControlButton({
   variant?: "danger";
   icon?: ControlIcon;
   hint?: string;
+  pressed?: boolean;
 }) {
   const base =
     "group inline-flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-all active:scale-[0.98]";
@@ -1053,7 +1066,7 @@ function ControlButton({
         : `${base} border-line bg-surface-2/50 text-muted hover:border-line-strong hover:text-white`;
 
   return (
-    <button type="button" onClick={onClick} className={classes}>
+    <button type="button" onClick={onClick} className={classes} aria-pressed={pressed}>
       {icon && <ControlGlyph name={icon} />}
       <span className="flex items-center">{children}</span>
       {hint && (
