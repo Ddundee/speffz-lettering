@@ -21,7 +21,7 @@ const FACE_NAMES: Record<Face, string> = {
 };
 
 /** Faces that take dark chip text for WCAG-AA contrast (white text fails on
- *  these: white #ffffff, yellow #ffd500, and orange #e8590c). */
+ *  these: white #ffffff, yellow #ffd500, and orange #f97316). */
 const LIGHT_FACES: Face[] = ["U", "D", "L"];
 
 interface FaceDrillProps {
