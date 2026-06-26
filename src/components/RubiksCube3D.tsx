@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useMemo, useCallback, useState, Suspense } from "react";
-import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
+import { useRef, useMemo, useCallback, useState, Suspense, useEffect } from "react";
+import { Canvas, useThree, useFrame, type ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, Text, RoundedBox } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
@@ -14,7 +14,9 @@ import type { Face, Sticker, StickerHighlight } from "@/types/cube";
 const CUBIE_SIZE = 0.94;
 const CUBIE_GAP = 0.06;
 const SPACING = CUBIE_SIZE + CUBIE_GAP;
-const STICKER_OFFSET = 0.002;
+const STICKER_OFFSET = 0.003;
+const STICKER_SIZE = CUBIE_SIZE * 0.88;
+const STICKER_INSET = CUBIE_SIZE * 0.78;
 
 const FACE_NORMALS: Record<Face, THREE.Vector3> = {
   U: new THREE.Vector3(0, 1, 0),
@@ -33,7 +35,6 @@ interface RubiksCube3DProps {
   showLetters?: boolean;
   focusFace?: Face | null;
   disabled?: boolean;
-  onResetView?: () => void;
   resetViewToken?: number;
 }
 
@@ -48,6 +49,8 @@ interface StickerMeshProps {
   onStickerClick?: (sticker: Sticker) => void;
   disabled?: boolean;
 }
+
+type ClickAnim = "idle" | "pulse" | "shake";
 
 function getHighlightVariant(
   stickerId: string | undefined,
@@ -68,8 +71,11 @@ function StickerMesh({
   onStickerClick,
   disabled,
 }: StickerMeshProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
+  const [clickAnim, setClickAnim] = useState<ClickAnim>("idle");
+  const animStartRef = useRef(0);
+  const prevHighlight = useRef<StickerHighlight["variant"] | undefined>(undefined);
   const normal = FACE_NORMALS[face];
   const baseColor = FACE_COLORS[face];
   const clickable = Boolean(sticker) && !disabled && !highlight;
@@ -95,12 +101,55 @@ function StickerMesh({
     return euler;
   }, [normal]);
 
+  useEffect(() => {
+    if (highlight === prevHighlight.current) return;
+    prevHighlight.current = highlight;
+    if (highlight === "incorrect") {
+      setClickAnim("shake");
+      animStartRef.current = performance.now();
+    } else if (highlight === "correct") {
+      setClickAnim("pulse");
+      animStartRef.current = performance.now();
+    }
+  }, [highlight]);
+
+  useFrame(() => {
+    const group = groupRef.current;
+    if (!group) return;
+
+    const baseScale = hovered && clickable ? 1.08 : 1;
+    let extraScale = 1;
+    let shakeX = 0;
+
+    if (clickAnim !== "idle") {
+      const elapsed = (performance.now() - animStartRef.current) / 1000;
+      if (clickAnim === "pulse") {
+        if (elapsed < 0.35) {
+          extraScale = 1 + Math.sin(elapsed * Math.PI / 0.35) * 0.12;
+        } else {
+          setClickAnim("idle");
+        }
+      } else if (clickAnim === "shake") {
+        if (elapsed < 0.45) {
+          shakeX = Math.sin(elapsed * 40) * 0.025 * (1 - elapsed / 0.45);
+        } else {
+          setClickAnim("idle");
+        }
+      }
+    }
+
+    group.scale.setScalar(baseScale * extraScale);
+    group.position.x = position.x + shakeX;
+    group.position.y = position.y;
+    group.position.z = position.z;
+  });
+
   const color = useMemo(() => {
     if (highlight === "correct") return "#22c55e";
     if (highlight === "incorrect") return "#ef4444";
     if (highlight === "hint") return "#facc15";
     if (highlight === "prompt") return "#60a5fa";
-    if (hovered && clickable) return brightenHex(baseColor, 0.18);
+    if (hovered && clickable) return brightenHex(baseColor, 0.22);
     return baseColor;
   }, [highlight, baseColor, hovered, clickable]);
 
@@ -115,8 +164,7 @@ function StickerMesh({
     return "#000000";
   }, [highlight, hovered, clickable, baseColor]);
 
-  const emissiveIntensity = highlight ? 0.35 : hovered && clickable ? 0.25 : 0;
-  const scale = hovered && clickable ? 1.06 : 1;
+  const emissiveIntensity = highlight ? 0.45 : hovered && clickable ? 0.3 : 0;
 
   const handlePointerOver = useCallback(
     (e: ThreeEvent<PointerEvent>) => {
@@ -135,42 +183,60 @@ function StickerMesh({
 
   const handleClick = useCallback(
     (e: ThreeEvent<MouseEvent>) => {
-      if (!sticker || disabled) return;
+      if (!sticker || disabled || highlight) return;
       e.stopPropagation();
+      setClickAnim("pulse");
+      animStartRef.current = performance.now();
       onStickerClick?.(sticker);
     },
-    [sticker, disabled, onStickerClick],
+    [sticker, disabled, highlight, onStickerClick],
   );
 
   const isLabeled = Boolean(sticker);
 
   return (
-    <group position={position} rotation={rotation} scale={scale}>
+    <group ref={groupRef} position={position} rotation={rotation}>
+      {/* Outer bevel ring */}
+      <mesh renderOrder={1}>
+        <planeGeometry args={[STICKER_SIZE, STICKER_SIZE]} />
+        <meshStandardMaterial
+          color="#0a0a0a"
+          roughness={0.7}
+          metalness={0.05}
+        />
+      </mesh>
+      {/* Inset sticker face */}
       <mesh
-        ref={meshRef}
+        renderOrder={2}
+        position={[0, 0, 0.001]}
         onClick={handleClick}
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
       >
-        <planeGeometry args={[CUBIE_SIZE * 0.92, CUBIE_SIZE * 0.92]} />
+        <planeGeometry args={[STICKER_INSET, STICKER_INSET]} />
         <meshStandardMaterial
           color={color}
           emissive={emissive}
           emissiveIntensity={emissiveIntensity}
-          roughness={0.45}
-          metalness={0.05}
+          roughness={0.35}
+          metalness={0.08}
         />
       </mesh>
-      <lineSegments>
-        <edgesGeometry
-          args={[new THREE.PlaneGeometry(CUBIE_SIZE * 0.92, CUBIE_SIZE * 0.92)]}
-        />
-        <lineBasicMaterial color="#1a1a1a" transparent opacity={0.35} />
+      {/* Inner highlight edge */}
+      <lineSegments position={[0, 0, 0.002]} renderOrder={3}>
+        <edgesGeometry args={[new THREE.PlaneGeometry(STICKER_INSET, STICKER_INSET)]} />
+        <lineBasicMaterial color="#1a1a1a" transparent opacity={0.5} />
       </lineSegments>
+      {hovered && clickable && (
+        <mesh position={[0, 0, 0.003]} renderOrder={4}>
+          <ringGeometry args={[STICKER_INSET * 0.42, STICKER_INSET * 0.48, 32]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={0.25} />
+        </mesh>
+      )}
       {showLetters && isLabeled && sticker && (
         <Text
-          position={[0, 0, 0.01]}
-          fontSize={0.28}
+          position={[0, 0, 0.012]}
+          fontSize={0.26}
           color="#111111"
           anchorX="center"
           anchorY="middle"
@@ -181,6 +247,12 @@ function StickerMesh({
       )}
     </group>
   );
+}
+
+function cubieBodyColor(x: number, y: number, z: number): string {
+  const hash = ((x + 2) * 7 + (y + 2) * 13 + (z + 2) * 17) % 5;
+  const shades = ["#0f0f0f", "#121212", "#141414", "#101010", "#131313"];
+  return shades[hash] ?? "#111111";
 }
 
 function CubieBody({
@@ -195,12 +267,25 @@ function CubieBody({
   return (
     <RoundedBox
       args={[CUBIE_SIZE, CUBIE_SIZE, CUBIE_SIZE]}
-      radius={0.04}
-      smoothness={4}
+      radius={0.06}
+      smoothness={6}
       position={[x * SPACING, y * SPACING, z * SPACING]}
     >
-      <meshStandardMaterial color="#111111" roughness={0.6} metalness={0.1} />
+      <meshStandardMaterial
+        color={cubieBodyColor(x, y, z)}
+        roughness={0.55}
+        metalness={0.12}
+      />
     </RoundedBox>
+  );
+}
+
+function GroundShadow() {
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.65, 0]} receiveShadow>
+      <circleGeometry args={[2.8, 32]} />
+      <meshBasicMaterial color="#000000" transparent opacity={0.35} />
+    </mesh>
   );
 }
 
@@ -323,9 +408,20 @@ function CubeScene({
 
   return (
     <>
-      <ambientLight intensity={0.65} />
-      <directionalLight position={[5, 8, 6]} intensity={1.1} />
-      <directionalLight position={[-4, -2, -5]} intensity={0.35} />
+      <color attach="background" args={["#0f172a"]} />
+      <fog attach="fog" args={["#0f172a", 12, 22]} />
+
+      <ambientLight intensity={0.45} />
+      <hemisphereLight args={["#94a3b8", "#1e293b", 0.35]} />
+      <directionalLight
+        position={[6, 10, 7]}
+        intensity={1.25}
+        castShadow={false}
+      />
+      <directionalLight position={[-5, 4, -6]} intensity={0.4} color="#cbd5e1" />
+      <directionalLight position={[0, -4, 8]} intensity={0.2} color="#64748b" />
+
+      <GroundShadow />
 
       <group rotation={focusRotation}>
         {cubies.map(({ x, y, z }) => (
@@ -370,10 +466,10 @@ function CubeScene({
 
 export default function RubiksCube3D(props: RubiksCube3DProps) {
   return (
-    <div className="relative h-full min-h-[320px] w-full rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-inner">
+    <div className="relative h-full min-h-[280px] w-full rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-inner sm:min-h-[320px]">
       <Canvas
         camera={{ position: INITIAL_CAMERA, fov: 45 }}
-        gl={{ antialias: true }}
+        gl={{ antialias: true, alpha: false }}
         dpr={[1, 2]}
       >
         <Suspense fallback={null}>
