@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo, useCallback, Suspense } from "react";
+import { useRef, useMemo, useCallback, useState, Suspense } from "react";
 import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, Text, RoundedBox } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
@@ -69,8 +69,10 @@ function StickerMesh({
   disabled,
 }: StickerMeshProps) {
   const meshRef = useRef<THREE.Mesh>(null);
+  const [hovered, setHovered] = useState(false);
   const normal = FACE_NORMALS[face];
   const baseColor = FACE_COLORS[face];
+  const clickable = Boolean(sticker) && !disabled && !highlight;
 
   const position = useMemo(() => {
     const center = new THREE.Vector3(
@@ -98,27 +100,36 @@ function StickerMesh({
     if (highlight === "incorrect") return "#ef4444";
     if (highlight === "hint") return "#facc15";
     if (highlight === "prompt") return "#60a5fa";
+    if (hovered && clickable) return brightenHex(baseColor, 0.18);
     return baseColor;
-  }, [highlight, baseColor]);
+  }, [highlight, baseColor, hovered, clickable]);
 
   const emissive = useMemo(() => {
-    if (!highlight) return "#000000";
-    if (highlight === "correct") return "#166534";
-    if (highlight === "incorrect") return "#991b1b";
-    if (highlight === "hint") return "#a16207";
-    return "#1d4ed8";
-  }, [highlight]);
+    if (highlight) {
+      if (highlight === "correct") return "#166534";
+      if (highlight === "incorrect") return "#991b1b";
+      if (highlight === "hint") return "#a16207";
+      return "#1d4ed8";
+    }
+    if (hovered && clickable) return baseColor;
+    return "#000000";
+  }, [highlight, hovered, clickable, baseColor]);
+
+  const emissiveIntensity = highlight ? 0.35 : hovered && clickable ? 0.25 : 0;
+  const scale = hovered && clickable ? 1.06 : 1;
 
   const handlePointerOver = useCallback(
     (e: ThreeEvent<PointerEvent>) => {
-      if (!sticker || disabled) return;
+      if (!clickable) return;
       e.stopPropagation();
+      setHovered(true);
       document.body.style.cursor = "pointer";
     },
-    [sticker, disabled],
+    [clickable],
   );
 
   const handlePointerOut = useCallback(() => {
+    setHovered(false);
     document.body.style.cursor = "default";
   }, []);
 
@@ -134,7 +145,7 @@ function StickerMesh({
   const isLabeled = Boolean(sticker);
 
   return (
-    <group position={position} rotation={rotation}>
+    <group position={position} rotation={rotation} scale={scale}>
       <mesh
         ref={meshRef}
         onClick={handleClick}
@@ -145,7 +156,7 @@ function StickerMesh({
         <meshStandardMaterial
           color={color}
           emissive={emissive}
-          emissiveIntensity={highlight ? 0.35 : 0}
+          emissiveIntensity={emissiveIntensity}
           roughness={0.45}
           metalness={0.05}
         />
@@ -377,3 +388,11 @@ export default function RubiksCube3D(props: RubiksCube3DProps) {
 }
 
 export { INITIAL_CAMERA };
+
+function brightenHex(hex: string, amount: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.min(255, ((n >> 16) & 0xff) + Math.round(255 * amount));
+  const g = Math.min(255, ((n >> 8) & 0xff) + Math.round(255 * amount));
+  const b = Math.min(255, (n & 0xff) + Math.round(255 * amount));
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
+}
