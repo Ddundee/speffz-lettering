@@ -93,7 +93,7 @@ export default function StatsPanel({
               role="tab"
               aria-selected={scope === s}
               onClick={() => setScope(s)}
-              className={`min-h-9 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+              className={`min-h-11 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                 scope === s
                   ? "bg-brand/15 text-brand shadow-[0_0_0_1px_rgb(45_212_191/0.4)_inset]"
                   : "text-muted hover:text-foreground"

@@ -15,7 +15,9 @@
   --surface-3: #1b2238;
   --foreground: #eef2fb;
   --muted: #93a0bd;
-  --faint: #5c6885;
+  /* Quieter than --muted but still clears WCAG-AA (>=4.5:1) on all surfaces
+     for the small ~10-11px labels that use it. */
+  --faint: #828fae;
   --line: #222b44;
   --line-strong: #313c5c;
 

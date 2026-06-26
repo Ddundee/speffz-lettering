@@ -634,7 +634,7 @@ export default function CubeTrainer() {
             <button
               type="button"
               onClick={() => setWeakLetterFilter(null)}
-              className="ml-auto min-h-9 rounded-lg border border-line bg-surface-2/60 px-3 py-1.5 text-xs font-semibold text-muted transition-colors hover:text-white"
+              className="ml-auto min-h-11 rounded-lg border border-line bg-surface-2/60 px-3 py-1.5 text-xs font-semibold text-muted transition-colors hover:text-white"
             >
               Clear filter
             </button>
@@ -914,7 +914,7 @@ function ShortcutLegend({ onClose }: { onClose: () => void }) {
         <button
           type="button"
           onClick={onClose}
-          className="min-h-9 rounded-lg border border-line bg-surface-2/60 px-3 text-xs font-medium text-muted transition-colors hover:text-white"
+          className="min-h-11 rounded-lg border border-line bg-surface-2/60 px-3 text-xs font-medium text-muted transition-colors hover:text-white"
         >
           Close
         </button>
@@ -960,7 +960,7 @@ function FilterBar({
             type="button"
             onClick={() => onChange(o.id)}
             aria-pressed={filter === o.id}
-            className={`min-h-9 flex-1 rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
+            className={`min-h-11 flex-1 rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
               filter === o.id
                 ? "bg-brand/15 text-brand shadow-[0_0_0_1px_rgb(45_212_191/0.4)_inset]"
                 : "text-muted hover:text-white"
