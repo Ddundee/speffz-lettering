@@ -243,11 +243,20 @@ export default function CubeTrainer() {
   // feedback, so refocus it whenever a new prompt re-enables it. Only steal
   // focus when that input is the active prompt — not in other modes, and not
   // while the settings drawer or the timed summary is up.
+  //
+  // `settingsOpen` is intentionally read by the guard but kept OUT of the
+  // dependency array: while the drawer is open, the effect must not steal
+  // focus, but *closing* it must not re-run the effect either — otherwise we'd
+  // refocus the input and clobber SettingsPanel's restore-focus-to-the-gear
+  // contract. The guard never goes stale: every legitimate refocus (new prompt
+  // → targetSticker.id change, or feedback unlock → inputLocked change) re-runs
+  // the effect via a listed dep, re-reading the then-current `settingsOpen`.
   useEffect(() => {
     if (mode !== "name-sticker" || inputLocked) return;
     if (settingsOpen || timedSummary) return;
     letterInputRef.current?.focus();
-  }, [mode, inputLocked, settingsOpen, timedSummary, targetSticker?.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- settingsOpen omitted by design (see above)
+  }, [mode, inputLocked, timedSummary, targetSticker?.id]);
 
   const recordAttempt = useCallback(
     (letter: string, correct: boolean) => {
