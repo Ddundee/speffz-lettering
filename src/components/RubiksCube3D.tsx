@@ -387,11 +387,15 @@ function CubeScene({
     controlsRef.current?.update();
   }, [camera]);
 
+  // Reset the camera only when the token actually changes (never on mount),
+  // preserving the original behavior while keeping ref access out of render.
   const prevToken = useRef(resetViewToken);
-  if (resetViewToken !== prevToken.current) {
-    prevToken.current = resetViewToken;
-    resetCamera();
-  }
+  useEffect(() => {
+    if (resetViewToken !== prevToken.current) {
+      prevToken.current = resetViewToken;
+      resetCamera();
+    }
+  }, [resetViewToken, resetCamera]);
 
   const focusRotation = useMemo(() => {
     if (!focusFace) return [0, 0, 0] as [number, number, number];
@@ -408,18 +412,18 @@ function CubeScene({
 
   return (
     <>
-      <color attach="background" args={["#0f172a"]} />
-      <fog attach="fog" args={["#0f172a", 12, 22]} />
+      <color attach="background" args={["#080b14"]} />
+      <fog attach="fog" args={["#080b14", 12, 23]} />
 
-      <ambientLight intensity={0.45} />
-      <hemisphereLight args={["#94a3b8", "#1e293b", 0.35]} />
+      <ambientLight intensity={0.5} />
+      <hemisphereLight args={["#aab8d8", "#10182e", 0.4]} />
       <directionalLight
         position={[6, 10, 7]}
-        intensity={1.25}
+        intensity={1.35}
         castShadow={false}
       />
-      <directionalLight position={[-5, 4, -6]} intensity={0.4} color="#cbd5e1" />
-      <directionalLight position={[0, -4, 8]} intensity={0.2} color="#64748b" />
+      <directionalLight position={[-5, 4, -6]} intensity={0.45} color="#cbd5e1" />
+      <directionalLight position={[0, -4, 8]} intensity={0.22} color="#5eead4" />
 
       <GroundShadow />
 
@@ -466,7 +470,9 @@ function CubeScene({
 
 export default function RubiksCube3D(props: RubiksCube3DProps) {
   return (
-    <div className="relative h-full min-h-[280px] w-full rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-inner sm:min-h-[320px]">
+    <div className="relative h-full min-h-[280px] w-full overflow-hidden rounded-3xl border border-line-strong bg-[radial-gradient(120%_120%_at_50%_0%,#141a2e_0%,#080b14_70%)] shadow-[0_30px_70px_-40px_rgba(0,0,0,0.9)] sm:min-h-[320px]">
+      {/* Subtle inner vignette + top sheen */}
+      <div className="pointer-events-none absolute inset-0 z-10 rounded-3xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]" />
       <Canvas
         camera={{ position: INITIAL_CAMERA, fov: 45 }}
         gl={{ antialias: true, alpha: false }}
@@ -476,8 +482,13 @@ export default function RubiksCube3D(props: RubiksCube3DProps) {
           <CubeScene {...props} />
         </Suspense>
       </Canvas>
-      <div className="pointer-events-none absolute bottom-3 left-3 rounded-lg bg-black/40 px-2 py-1 text-xs text-slate-300">
-        Drag to rotate · Click stickers
+      <div className="pointer-events-none absolute bottom-3 left-3 z-20 flex items-center gap-1.5 rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-[11px] font-medium text-slate-200 backdrop-blur-sm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5 text-brand" aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3a9 9 0 100 18 9 9 0 000-18zM3.6 9h16.8M3.6 15h16.8M12 3c2.5 2.4 2.5 15.6 0 18M12 3c-2.5 2.4-2.5 15.6 0 18" />
+        </svg>
+        Drag to rotate
+        <span className="text-white/30">·</span>
+        Click stickers
       </div>
     </div>
   );

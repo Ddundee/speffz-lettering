@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -13,9 +13,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Blind Cube Letter Trainer",
+  title: "Speffz Trainer — Blind Cube Lettering",
   description:
     "Train Speffz-style sticker lettering on a 3×3 Rubik's cube for blindfolded solving and Old Pochmann.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#05070e",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({
@@ -28,7 +33,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-slate-950 font-sans text-slate-100">
+      <body className="flex min-h-full flex-col font-sans text-foreground">
         {children}
       </body>
     </html>

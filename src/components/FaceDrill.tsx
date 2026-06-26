@@ -11,6 +11,18 @@ const POSITIONS: StickerPosition[] = [
   "bottom-right",
 ];
 
+const FACE_NAMES: Record<Face, string> = {
+  U: "Up",
+  D: "Down",
+  F: "Front",
+  B: "Back",
+  R: "Right",
+  L: "Left",
+};
+
+/** Faces whose colors are light enough to need dark foreground text. */
+const LIGHT_FACES: Face[] = ["U", "D"];
+
 interface FaceDrillProps {
   face: Face;
   practiceAllFaces: boolean;
@@ -72,41 +84,70 @@ export default function FaceDrill({
   const cellClass = (position: StickerPosition) => {
     const state = feedback?.[position] ?? "idle";
     const base =
-      "min-h-11 min-w-11 h-14 w-14 rounded-xl border-2 text-center text-2xl font-bold uppercase outline-none transition-all sm:h-16 sm:w-16 md:h-20 md:w-20";
-    if (state === "correct") return `${base} border-emerald-400 bg-emerald-500/20 text-emerald-100`;
-    if (state === "incorrect") return `${base} border-rose-400 bg-rose-500/20 text-rose-100`;
-    return `${base} border-slate-600 bg-slate-800 text-white focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30`;
+      "min-h-11 min-w-11 h-14 w-14 rounded-2xl border-2 text-center text-2xl font-bold uppercase outline-none transition-all duration-200 sm:h-16 sm:w-16 md:h-[4.5rem] md:w-[4.5rem]";
+    if (state === "correct")
+      return `${base} border-good bg-good/20 text-good shadow-[0_0_18px_-6px_rgb(52_211_153/0.8)]`;
+    if (state === "incorrect")
+      return `${base} border-bad bg-bad/20 text-bad shadow-[0_0_18px_-6px_rgb(251_113_133/0.8)]`;
+    return `${base} border-line-strong bg-surface-2 text-white focus:border-brand focus:ring-2 focus:ring-brand/30`;
   };
+
+  const faceColor = FACE_COLORS[face];
+  const chipText = LIGHT_FACES.includes(face) ? "#0b0f1a" : "#ffffff";
 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-3">
-        <label className="text-sm text-slate-400">Face</label>
-        <select
-          value={face}
-          disabled={practiceAllFaces || disabled}
-          onChange={(e) => onFaceChange?.(e.target.value as Face)}
-          className="min-h-11 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
-        >
-          {ALL_FACES.map((f) => (
-            <option key={f} value={f}>
-              {f} — {f === "U" ? "Up" : f === "D" ? "Down" : f === "F" ? "Front" : f === "B" ? "Back" : f === "R" ? "Right" : "Left"}
-            </option>
-          ))}
-        </select>
         <span
-          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-600 text-sm font-bold"
-          style={{ backgroundColor: FACE_COLORS[face] }}
+          className="flex h-10 w-10 items-center justify-center rounded-xl text-base font-extrabold shadow-md ring-1 ring-black/20"
+          style={{ backgroundColor: faceColor, color: chipText }}
+          aria-hidden
         >
           {face}
         </span>
+        <div className="flex items-center gap-2">
+          <label htmlFor="face-drill-select" className="text-sm text-muted">
+            Face
+          </label>
+          <div className="relative">
+            <select
+              id="face-drill-select"
+              value={face}
+              disabled={practiceAllFaces || disabled}
+              onChange={(e) => onFaceChange?.(e.target.value as Face)}
+              className="min-h-11 appearance-none rounded-xl border border-line-strong bg-surface-2 py-2 pl-3 pr-9 text-sm font-medium text-white transition-colors hover:border-brand/50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {ALL_FACES.map((f) => (
+                <option key={f} value={f}>
+                  {f} — {FACE_NAMES[f]}
+                </option>
+              ))}
+            </select>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint"
+              aria-hidden
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+            </svg>
+          </div>
+        </div>
       </div>
 
-      <p className="text-sm text-slate-400">
-        Enter the four letters clockwise from top-left. Example for U: A B / D C
+      <p className="text-sm leading-relaxed text-muted">
+        Enter the four letters clockwise from top-left.
+        <span className="ml-1 text-faint">Example for U: A B / D C</span>
       </p>
 
-      <div className="mx-auto w-fit rounded-2xl border border-slate-700 bg-slate-900/50 p-4">
+      <div
+        className="mx-auto w-fit rounded-2xl border border-line p-4"
+        style={{
+          background: `linear-gradient(160deg, color-mix(in srgb, ${faceColor} 9%, var(--surface-1)), var(--surface-0))`,
+        }}
+      >
         <div className="grid grid-cols-2 gap-3">
           <input
             ref={(el) => { inputRefs.current["top-left"] = el ?? undefined; }}
@@ -151,21 +192,34 @@ export default function FaceDrill({
         type="button"
         disabled={disabled || POSITIONS.some((p) => !inputs[p])}
         onClick={handleSubmit}
-        className="min-h-11 w-full rounded-xl bg-cyan-500 px-4 py-3 font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
+        className="min-h-11 w-full rounded-xl bg-gradient-to-r from-brand to-brand-strong px-4 py-3 font-semibold text-surface-0 shadow-lg shadow-brand/20 transition-all hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:from-surface-3 disabled:to-surface-3 disabled:text-faint disabled:shadow-none"
       >
         Check Face
       </button>
 
       {feedback && (
-        <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3 text-sm">
-          <div className="mb-2 font-medium text-slate-300">Answer key</div>
-          <pre className="font-mono text-lg text-white">{formatGrid(getFaceLetterGrid(face))}</pre>
+        <div className="animate-fade-in-up rounded-2xl border border-line bg-surface-0/70 p-4 text-sm">
+          <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-faint">
+            <span
+              className="inline-block h-2.5 w-2.5 rounded-full"
+              style={{ backgroundColor: faceColor }}
+            />
+            Answer key · {face} face
+          </div>
+          <div className="grid w-fit grid-cols-2 gap-1.5">
+            {getFaceLetterGrid(face)
+              .flat()
+              .map((letter, i) => (
+                <span
+                  key={i}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 font-mono text-lg font-bold text-white"
+                >
+                  {letter}
+                </span>
+              ))}
+          </div>
         </div>
       )}
     </div>
   );
-}
-
-function formatGrid(grid: string[][]): string {
-  return `${grid[0][0]} ${grid[0][1]}\n${grid[1][0]} ${grid[1][1]}`;
 }
