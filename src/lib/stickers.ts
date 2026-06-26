@@ -148,6 +148,14 @@ export function filterStickers(
   return STICKERS.filter((s) => s.type === "corner");
 }
 
+export function filterStickersByLetters(
+  pool: Sticker[],
+  letters: string[],
+): Sticker[] {
+  const set = new Set(letters.map((l) => l.toUpperCase()));
+  return pool.filter((s) => set.has(s.letter));
+}
+
 export function pickRandomSticker(
   pool: Sticker[],
   excludeId?: string,

@@ -35,6 +35,15 @@ export interface LetterStats {
   incorrect: number;
   totalTimeMs: number;
   attempts: number;
+  lastAttemptAt?: string;
+}
+
+export interface SessionLetterStats {
+  letter: string;
+  correct: number;
+  incorrect: number;
+  attempts: number;
+  lastAttemptAt?: string;
 }
 
 export interface FaceStats {
@@ -50,6 +59,7 @@ export interface SessionStats {
   incorrect: number;
   totalTimeMs: number;
   timedRounds: number;
+  letters: Record<string, SessionLetterStats>;
 }
 
 export interface PersistedStats {
