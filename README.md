@@ -93,9 +93,9 @@ Open [http://localhost:3000](http://localhost:3000).
 ### Other commands
 
 ```bash
-npm run build   # production build
-npm run start   # serve production build
-npm run lint    # ESLint
+npm run next:build   # standard Next.js production build (local / Vercel-style)
+npm run start        # serve production build
+npm run lint         # ESLint
 ```
 
 ## Deploy to Cloudflare
@@ -112,12 +112,16 @@ This app deploys to [Cloudflare Workers](https://developers.cloudflare.com/worke
 
 ```bash
 npm install
-npm run cf:build    # build for Cloudflare (Next.js + OpenNext transform)
+npm run build       # build for Cloudflare (Next.js + OpenNext → .open-next/)
 npm run preview     # build and preview locally in the Workers runtime
-npm run deploy      # build and deploy to Cloudflare Workers
+npm run build && npm run deploy   # build and deploy to Cloudflare Workers
 ```
 
 The worker name is `speffz-lettering` (see `wrangler.jsonc`). After deploy, Wrangler prints the `*.workers.dev` URL.
+
+`npm run build` runs `opennextjs-cloudflare build`, which produces `.open-next/worker.js` and related assets required by Wrangler. Use `npm run next:build` only when you need a plain Next.js build without the OpenNext transform.
+
+Builds are capped at a 4GB Node heap (`NODE_OPTIONS='--max-old-space-size=4096'`) for low-RAM machines (e.g. 8GB Mac). Run one build at a time — do not run `npm run build` alongside `npm run dev` or other heavy processes.
 
 ### Environment variables
 
@@ -127,9 +131,18 @@ No secrets are required for the trainer itself. Optional local dev vars live in 
 |----------|---------|
 | `NEXTJS_ENV` | Which Next.js `.env*` files to load (`development` locally, defaults to `production` on deploy) |
 
-### Cloudflare CI (optional)
+### Cloudflare CI (Git-connected Workers)
 
-Connect the repo in the Cloudflare dashboard and set the build command to `npm run cf:build` and the deploy command to `npm run deploy` (or use Workers Builds with the same commands).
+When connecting this repo in the Cloudflare dashboard, use the default Workers Builds split:
+
+| Step | Command |
+|------|---------|
+| **Build command** | `npm run build` |
+| **Deploy command** | `npx wrangler deploy` |
+
+Cloudflare CI runs the build step first, then deploy. The build must produce `.open-next/` artifacts; `npm run build` handles that via OpenNext. Do **not** set the build command to `next build` alone — Wrangler will fail with “Could not find compiled Open Next config”.
+
+For a one-shot local deploy after building: `npm run deploy` (runs `opennextjs-cloudflare deploy` against the existing `.open-next/` output).
 
 ## Tech stack
 
