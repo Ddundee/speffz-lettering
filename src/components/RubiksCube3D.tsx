@@ -412,18 +412,18 @@ function CubeScene({
 
   return (
     <>
-      <color attach="background" args={["#080b14"]} />
-      <fog attach="fog" args={["#080b14", 12, 23]} />
+      <color attach="background" args={["#050506"]} />
+      <fog attach="fog" args={["#050506", 12, 23]} />
 
       <ambientLight intensity={0.5} />
-      <hemisphereLight args={["#aab8d8", "#10182e", 0.4]} />
+      <hemisphereLight args={["#cfcfd6", "#0a0a0c", 0.4]} />
       <directionalLight
         position={[6, 10, 7]}
         intensity={1.35}
         castShadow={false}
       />
-      <directionalLight position={[-5, 4, -6]} intensity={0.45} color="#cbd5e1" />
-      <directionalLight position={[0, -4, 8]} intensity={0.22} color="#5eead4" />
+      <directionalLight position={[-5, 4, -6]} intensity={0.45} color="#d4d4d8" />
+      <directionalLight position={[0, -4, 8]} intensity={0.22} color="#3fb950" />
 
       <GroundShadow />
 
@@ -470,7 +470,7 @@ function CubeScene({
 
 export default function RubiksCube3D(props: RubiksCube3DProps) {
   return (
-    <div className="relative h-full min-h-[280px] w-full overflow-hidden rounded-3xl border border-line-strong bg-[radial-gradient(120%_120%_at_50%_0%,#141a2e_0%,#080b14_70%)] shadow-[0_30px_70px_-40px_rgba(0,0,0,0.9)] sm:min-h-[320px]">
+    <div className="relative h-full min-h-[280px] w-full overflow-hidden rounded-3xl border border-line-strong bg-[radial-gradient(120%_120%_at_50%_0%,#1c1c1f_0%,#050506_70%)] shadow-[0_30px_70px_-40px_rgba(0,0,0,0.9)] sm:min-h-[320px]">
       {/* Subtle inner vignette + top sheen */}
       <div className="pointer-events-none absolute inset-0 z-10 rounded-3xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]" />
       <Canvas

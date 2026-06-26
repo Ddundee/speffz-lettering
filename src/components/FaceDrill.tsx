@@ -93,7 +93,7 @@ export default function FaceDrill({
   };
 
   const faceColor = FACE_COLORS[face];
-  const chipText = LIGHT_FACES.includes(face) ? "#0b0f1a" : "#ffffff";
+  const chipText = LIGHT_FACES.includes(face) ? "#0a0a0a" : "#ffffff";
 
   return (
     <div className="space-y-5">

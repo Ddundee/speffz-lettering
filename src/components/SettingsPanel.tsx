@@ -220,7 +220,7 @@ function ModeOption({
       onKeyDown={onKeyDown}
       className={`w-full rounded-xl border p-4 text-left transition-all duration-200 ${
         selected
-          ? "border-brand/60 bg-brand/10 shadow-[0_0_0_1px_rgb(45_212_191/0.35)_inset]"
+          ? "border-brand/60 bg-brand/10 shadow-[0_0_0_1px_rgb(63_185_80/0.35)_inset]"
           : "border-line bg-surface-1/60 hover:border-line-strong hover:bg-surface-2/60"
       }`}
     >

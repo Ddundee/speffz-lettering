@@ -19,7 +19,7 @@ const MODES: ModeMeta[] = [
     description: "Click the sticker matching the prompt",
     shortcut: "1",
     accent: "var(--brand)",
-    glow: "45 212 191",
+    glow: "63 185 80",
     icon: TargetIcon,
   },
   {

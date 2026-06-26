@@ -72,7 +72,7 @@ export const FACE_COLORS: Record<Face, string> = {
   F: "#009b48",
   B: "#0046ad",
   R: "#b71234",
-  L: "#ff5800",
+  L: "#e8590c",
 };
 
 export const ALL_FACES: Face[] = ["U", "L", "F", "R", "B", "D"];

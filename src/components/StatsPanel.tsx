@@ -94,7 +94,7 @@ export default function StatsPanel({
               onClick={() => setScope(s)}
               className={`min-h-11 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                 scope === s
-                  ? "bg-brand/15 text-brand shadow-[0_0_0_1px_rgb(45_212_191/0.4)_inset]"
+                  ? "bg-brand/15 text-brand shadow-[0_0_0_1px_rgb(63_185_80/0.4)_inset]"
                   : "text-muted hover:text-foreground"
               }`}
             >
@@ -141,7 +141,7 @@ export default function StatsPanel({
                 className="mx-auto flex h-7 w-7 items-center justify-center rounded-lg font-mono text-sm font-bold ring-1 ring-black/20"
                 style={{
                   backgroundColor: FACE_COLORS[face],
-                  color: LIGHT_FACES.includes(face) ? "#0b0f1a" : "#ffffff",
+                  color: LIGHT_FACES.includes(face) ? "#0a0a0a" : "#ffffff",
                 }}
               >
                 {face}
@@ -257,7 +257,7 @@ export default function StatsPanel({
                               backgroundColor: sticker ? FACE_COLORS[sticker.face] : "var(--surface-3)",
                               color:
                                 sticker && LIGHT_FACES.includes(sticker.face)
-                                  ? "#0b0f1a"
+                                  ? "#0a0a0a"
                                   : "#ffffff",
                             }}
                           >

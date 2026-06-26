@@ -41,7 +41,7 @@ import type {
 const RubiksCube3D = dynamic(() => import("@/components/RubiksCube3D"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full min-h-[280px] flex-col items-center justify-center gap-3 rounded-3xl border border-line-strong bg-[radial-gradient(120%_120%_at_50%_0%,#141a2e_0%,#080b14_70%)] text-muted sm:min-h-[320px]">
+    <div className="flex h-full min-h-[280px] flex-col items-center justify-center gap-3 rounded-3xl border border-line-strong bg-[radial-gradient(120%_120%_at_50%_0%,#1c1c1f_0%,#050506_70%)] text-muted sm:min-h-[320px]">
       <span className="flex h-10 w-10 animate-[float-soft_2s_ease-in-out_infinite] items-center justify-center rounded-xl border border-line-strong bg-surface-2">
         <span className="grid grid-cols-2 gap-0.5">
           <span className="h-2 w-2 rounded-[2px] bg-face-f" />
@@ -72,7 +72,7 @@ const MODE_META: Record<
     title: "Find the Letter",
     hint: "Click the sticker that matches the prompt",
     accent: "var(--brand)",
-    glow: "45 212 191",
+    glow: "63 185 80",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4.5 w-4.5" aria-hidden>
         <circle cx="12" cy="12" r="8" />
@@ -736,7 +736,7 @@ export default function CubeTrainer() {
                     </p>
                     <div
                       key={targetLetter || "empty"}
-                      className="mt-3 flex h-28 w-28 animate-pop-in items-center justify-center rounded-3xl border border-line-strong bg-[radial-gradient(120%_120%_at_50%_0%,var(--surface-2),var(--surface-0))] shadow-[0_18px_40px_-22px_rgb(45_212_191/0.7)]"
+                      className="mt-3 flex h-28 w-28 animate-pop-in items-center justify-center rounded-3xl border border-line-strong bg-[radial-gradient(120%_120%_at_50%_0%,var(--surface-2),var(--surface-0))] shadow-[0_18px_40px_-22px_rgb(63_185_80/0.7)]"
                     >
                       <span className="bg-gradient-to-b from-white to-brand bg-clip-text font-mono text-6xl font-black text-transparent">
                         {targetLetter || "—"}
@@ -848,7 +848,7 @@ export default function CubeTrainer() {
 function CubeMark({ className }: { className?: string }) {
   return (
     <span
-      className={`relative inline-flex items-center justify-center rounded-xl border border-line-strong bg-[radial-gradient(120%_120%_at_50%_0%,var(--surface-2),var(--surface-0))] shadow-[0_8px_22px_-12px_rgb(45_212_191/0.8)] ${className ?? ""}`}
+      className={`relative inline-flex items-center justify-center rounded-xl border border-line-strong bg-[radial-gradient(120%_120%_at_50%_0%,var(--surface-2),var(--surface-0))] shadow-[0_8px_22px_-12px_rgb(63_185_80/0.8)] ${className ?? ""}`}
       aria-hidden
     >
       <span className="grid grid-cols-2 gap-[3px]">
@@ -982,7 +982,7 @@ function FilterBar({
             aria-pressed={filter === o.id}
             className={`min-h-11 flex-1 rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
               filter === o.id
-                ? "bg-brand/15 text-brand shadow-[0_0_0_1px_rgb(45_212_191/0.4)_inset]"
+                ? "bg-brand/15 text-brand shadow-[0_0_0_1px_rgb(63_185_80/0.4)_inset]"
                 : "text-muted hover:text-white"
             }`}
           >
@@ -1071,7 +1071,7 @@ function ControlButton({
     variant === "danger"
       ? `${base} border-bad/30 bg-bad/5 text-bad hover:border-bad/50 hover:bg-bad/10`
       : active
-        ? `${base} border-brand/50 bg-brand/15 text-brand shadow-[0_0_18px_-8px_rgb(45_212_191/0.9)]`
+        ? `${base} border-brand/50 bg-brand/15 text-brand shadow-[0_0_18px_-8px_rgb(63_185_80/0.9)]`
         : `${base} border-line bg-surface-2/50 text-muted hover:border-line-strong hover:text-white`;
 
   return (

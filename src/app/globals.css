@@ -2,37 +2,40 @@
 
 /* ------------------------------------------------------------------ *
  * Speffz Trainer — design system
- * Refined dark base + the six Rubik's-cube face colors as a coherent
- * vibrant accent system. Brand accent is a speedcuber "cyan/tech" hue.
+ * Editorial pure-black base (neutral charcoal surfaces) with a single
+ * sophisticated green brand accent, inspired by a dark "anti-normal"
+ * pitch-deck aesthetic. The six Rubik's-cube face colors remain a
+ * functional accent system layered on top.
  * ------------------------------------------------------------------ */
 
 :root {
-  /* Base surfaces — near-black with a cool blue undertone, layered */
-  --background: #05070e;
-  --surface-0: #080b14;
-  --surface-1: #0d1120;
-  --surface-2: #141a2e;
-  --surface-3: #1b2238;
-  --foreground: #eef2fb;
-  --muted: #93a0bd;
+  /* Base surfaces — near-pure-black, neutral charcoal, layered
+     (reference: #000 field rising to ~#282829 cards) */
+  --background: #050506;
+  --surface-0: #0b0b0d;
+  --surface-1: #131315;
+  --surface-2: #1c1c1f;
+  --surface-3: #26262a;
+  --foreground: #f4f4f5;
+  --muted: #a1a1aa;
   /* Quieter than --muted but still clears WCAG-AA (>=4.5:1) on all surfaces
      for the small ~10-11px labels that use it. */
-  --faint: #828fae;
-  --line: #222b44;
-  --line-strong: #313c5c;
+  --faint: #90909a;
+  --line: #27272b;
+  --line-strong: #38383e;
 
-  /* Brand accent (interactive / focus) */
-  --brand: #2dd4bf;
-  --brand-strong: #14b8a6;
-  --brand-glow: 45 212 191;
+  /* Brand accent (interactive / focus) — reference's signature green */
+  --brand: #3fb950;
+  --brand-strong: #2f9e44;
+  --brand-glow: 63 185 80;
 
-  /* Cube face colors */
+  /* Cube face colors (UI-accent variants; physical cube lives in stickers.ts) */
   --face-u: #f8fafc;
   --face-d: #ffd500;
   --face-f: #00b85c;
   --face-b: #2563eb;
   --face-r: #e11d48;
-  --face-l: #ff7a18;
+  --face-l: #e8590c;
 
   /* Semantic */
   --good: #34d399;
@@ -78,11 +81,11 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
-  /* Ambient depth: soft brand + face-color glows behind everything */
+  /* Ambient depth: restrained green brand glow over the near-black field */
   background-image:
-    radial-gradient(60rem 60rem at 12% -10%, rgba(45, 212, 191, 0.08), transparent 60%),
-    radial-gradient(50rem 50rem at 100% 0%, rgba(37, 99, 235, 0.08), transparent 55%),
-    radial-gradient(45rem 45rem at 50% 120%, rgba(225, 29, 72, 0.06), transparent 55%);
+    radial-gradient(60rem 60rem at 12% -10%, rgba(63, 185, 80, 0.07), transparent 60%),
+    radial-gradient(50rem 50rem at 100% 0%, rgba(63, 185, 80, 0.05), transparent 55%),
+    radial-gradient(45rem 45rem at 50% 120%, rgba(255, 255, 255, 0.025), transparent 55%);
   background-attachment: fixed;
 }
 
