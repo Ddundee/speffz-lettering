@@ -108,6 +108,22 @@ export const STICKER_BY_LETTER: Record<string, Sticker> = Object.fromEntries(
   STICKERS.map((s) => [s.letter, s]),
 );
 
+export const STICKER_BY_LOCATION: Record<string, Sticker> = Object.fromEntries(
+  STICKERS.map((s) => [
+    `${s.face}:${s.coordinates.x},${s.coordinates.y},${s.coordinates.z}`,
+    s,
+  ]),
+);
+
+export function getStickerAtCubieFace(
+  face: Face,
+  x: -1 | 0 | 1,
+  y: -1 | 0 | 1,
+  z: -1 | 0 | 1,
+): Sticker | undefined {
+  return STICKER_BY_LOCATION[`${face}:${x},${y},${z}`];
+}
+
 export function getStickersForFace(face: Face): Sticker[] {
   return STICKERS.filter((s) => s.face === face);
 }
