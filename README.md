@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Blind Cube Letter Trainer
 
-## Getting Started
+An interactive web app for memorizing **Speffz-style sticker lettering** on a 3×3 Rubik's cube — built for blindfolded solving and Old Pochmann edge/corner tracing.
 
-First, run the development server:
+## What it does
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+The app renders a clickable 3D cube and runs short drills so you learn which letter belongs on each sticker. Progress (accuracy, streaks, weak letters, response times) is saved in **localStorage**.
+
+## Training modes
+
+### 1. Find the Letter
+
+A random letter is shown (e.g. “Find K”). Click the matching sticker on the 3D cube. Correct clicks flash green; wrong clicks flash red and briefly highlight the correct sticker.
+
+### 2. Name the Sticker
+
+A sticker is highlighted on the cube. Type its letter and press Enter. Tracks typing accuracy and average response time.
+
+### 3. Face Drill
+
+Pick a face (U, L, F, R, B, D) or practice all faces in random order. Fill in four input boxes arranged like the face layout and submit to check all four letters.
+
+## Letter scheme (Speffz)
+
+On each face, letters go **clockwise** around the four non-center stickers: top-left → top-right → bottom-right → bottom-left.
+
+Visual layout (example U face):
+
+```
+A B
+D C
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Face | Top-left | Top-right | Bottom-right | Bottom-left |
+|------|----------|-----------|--------------|-------------|
+| U    | A        | B         | C            | D           |
+| L    | E        | F         | G            | H           |
+| F    | I        | J         | K            | L           |
+| R    | M        | N         | O            | P           |
+| B    | Q        | R         | S            | T           |
+| D    | U        | V         | W            | X           |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Centers are unlabeled and not part of drills. Letter mappings live in `src/lib/stickers.ts` for easy customization.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Features
 
-## Learn More
+- Interactive 3D cube (orbit controls, reset view, optional letter overlay)
+- Filters: all stickers, edges only, corners only
+- 60-second timed mode with end-of-round summary
+- Stats: streak, accuracy, weak letters, response times
+- Responsive dashboard layout (desktop & tablet)
 
-To learn more about Next.js, take a look at the following resources:
+## Run locally
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm install
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000).
 
-## Deploy on Vercel
+### Other commands
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run build   # production build
+npm run start   # serve production build
+npm run lint    # ESLint
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Tech stack
+
+- Next.js (App Router), TypeScript, React, Tailwind CSS
+- Three.js via `@react-three/fiber` and `@react-three/drei`
