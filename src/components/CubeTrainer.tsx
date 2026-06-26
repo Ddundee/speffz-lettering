@@ -12,7 +12,6 @@ import {
 } from "@/lib/stickers";
 import {
   buildTimedSummary,
-  getAccuracy,
   loadStats,
   recordFaceAttempt,
   recordLetterAttempt,
@@ -57,6 +56,7 @@ export default function CubeTrainer() {
   const [roundIncorrect, setRoundIncorrect] = useState(0);
   const roundLettersRef = useRef<string[]>([]);
   const roundTimesRef = useRef<Record<string, number[]>>({});
+  const roundMissedCountsRef = useRef<Record<string, number>>({});
 
   const [targetSticker, setTargetSticker] = useState<Sticker | null>(null);
   const [targetLetter, setTargetLetter] = useState<string>("");
@@ -120,20 +120,14 @@ export default function CubeTrainer() {
 
   const endTimedRound = useCallback(() => {
     if (!stats) return;
-    const base = buildTimedSummary(
+    const summary = buildTimedSummary(
       stats,
       roundLettersRef.current,
       roundTimesRef.current,
+      roundCorrect,
+      roundIncorrect,
+      roundMissedCountsRef.current,
     );
-    const summary: TimedSummary = {
-      ...base,
-      score: roundCorrect,
-      accuracy: getAccuracy(roundCorrect, roundIncorrect),
-      missedLetters: roundLettersRef.current.filter((letter) => {
-        const ls = stats.letters[letter];
-        return ls && ls.incorrect > 0;
-      }).slice(0, 8),
-    };
     setTimedSummary(summary);
     setTimerSeconds(null);
     setInputLocked(true);
@@ -169,7 +163,11 @@ export default function CubeTrainer() {
       const updated = recordLetterAttempt(stats, letter, correct, timeMs);
       persistStats(updated);
       if (correct) setRoundCorrect((c) => c + 1);
-      else setRoundIncorrect((c) => c + 1);
+      else {
+        setRoundIncorrect((c) => c + 1);
+        roundMissedCountsRef.current[letter] =
+          (roundMissedCountsRef.current[letter] ?? 0) + 1;
+      }
     },
     [stats, persistStats],
   );
@@ -311,6 +309,7 @@ export default function CubeTrainer() {
     setRoundIncorrect(0);
     roundLettersRef.current = [];
     roundTimesRef.current = {};
+    roundMissedCountsRef.current = {};
     setTimedSummary(null);
     setInputLocked(false);
     if (timedMode) {
@@ -328,6 +327,7 @@ export default function CubeTrainer() {
     setRoundIncorrect(0);
     roundLettersRef.current = [];
     roundTimesRef.current = {};
+    roundMissedCountsRef.current = {};
     setTimedSummary(null);
     startNewPrompt();
   };
@@ -393,6 +393,7 @@ export default function CubeTrainer() {
                 setRoundIncorrect(0);
                 roundLettersRef.current = [];
                 roundTimesRef.current = {};
+                roundMissedCountsRef.current = {};
               } else {
                 setTimerSeconds(null);
               }
@@ -421,7 +422,9 @@ export default function CubeTrainer() {
 
           <section className="space-y-5">
             <div className="rounded-2xl border border-slate-700 bg-slate-900/60 p-5">
-              <FilterBar filter={filter} onChange={setFilter} />
+              {mode !== "face-drill" && (
+                <FilterBar filter={filter} onChange={setFilter} />
+              )}
 
               {mode === "face-drill" && (
                 <label className="mt-3 flex items-center gap-2 text-sm text-slate-300">

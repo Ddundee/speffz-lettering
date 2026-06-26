@@ -183,13 +183,15 @@ export function buildTimedSummary(
   stats: PersistedStats,
   roundLetters: string[],
   roundTimes: Record<string, number[]>,
+  roundCorrect: number,
+  roundIncorrect: number,
+  roundMissedCounts: Record<string, number>,
 ): TimedSummary {
-  const score = stats.session.correct;
-  const accuracy = getAccuracy(stats.session.correct, stats.session.incorrect);
+  const score = roundCorrect;
+  const accuracy = getAccuracy(roundCorrect, roundIncorrect);
 
-  const missedLetters = Object.entries(stats.letters)
-    .filter(([, l]) => l.incorrect > 0)
-    .sort((a, b) => b[1].incorrect - a[1].incorrect)
+  const missedLetters = Object.entries(roundMissedCounts)
+    .sort((a, b) => b[1] - a[1])
     .map(([letter]) => letter)
     .slice(0, 8);
 
