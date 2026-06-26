@@ -35,7 +35,7 @@ export default function ModeSelector({ mode, onChange }: ModeSelectorProps) {
             key={m.id}
             type="button"
             onClick={() => onChange(m.id)}
-            className={`rounded-xl border px-4 py-2 text-left transition-all ${
+            className={`rounded-xl border px-3 py-2 text-left transition-all min-h-11 sm:px-4 ${
               active
                 ? "border-cyan-400 bg-cyan-500/15 text-cyan-100 shadow-lg shadow-cyan-500/10"
                 : "border-slate-600 bg-slate-800/60 text-slate-300 hover:border-slate-500 hover:bg-slate-800"

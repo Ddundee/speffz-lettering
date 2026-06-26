@@ -72,7 +72,7 @@ export default function FaceDrill({
   const cellClass = (position: StickerPosition) => {
     const state = feedback?.[position] ?? "idle";
     const base =
-      "h-16 w-16 rounded-xl border-2 text-center text-2xl font-bold uppercase outline-none transition-all sm:h-20 sm:w-20";
+      "min-h-11 min-w-11 h-14 w-14 rounded-xl border-2 text-center text-2xl font-bold uppercase outline-none transition-all sm:h-16 sm:w-16 md:h-20 md:w-20";
     if (state === "correct") return `${base} border-emerald-400 bg-emerald-500/20 text-emerald-100`;
     if (state === "incorrect") return `${base} border-rose-400 bg-rose-500/20 text-rose-100`;
     return `${base} border-slate-600 bg-slate-800 text-white focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30`;
@@ -86,7 +86,7 @@ export default function FaceDrill({
           value={face}
           disabled={practiceAllFaces || disabled}
           onChange={(e) => onFaceChange?.(e.target.value as Face)}
-          className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+          className="min-h-11 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
         >
           {ALL_FACES.map((f) => (
             <option key={f} value={f}>
@@ -151,7 +151,7 @@ export default function FaceDrill({
         type="button"
         disabled={disabled || POSITIONS.some((p) => !inputs[p])}
         onClick={handleSubmit}
-        className="w-full rounded-xl bg-cyan-500 px-4 py-3 font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
+        className="min-h-11 w-full rounded-xl bg-cyan-500 px-4 py-3 font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
       >
         Check Face
       </button>
