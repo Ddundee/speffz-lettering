@@ -1,0 +1,40 @@
+[2026-06-25 19:24:48] Watchdog started (PID 87009) for project: /Users/dhanushchilakala/home/c/speffz-lettering
+[2026-06-25 19:24:48] Config: max_crashes=5 crash_window=600s
+[2026-06-25 19:24:48] Starting Claude session in /Users/dhanushchilakala/home/c/speffz-lettering
+[2026-06-25 19:24:48] Claude started (PID 87067)
+You've hit your monthly spend limit · raise it at claude.ai/settings/usage
+[2026-06-25 19:24:53] Claude exited with code 1
+[2026-06-25 19:24:53] Crash detected (count: 1 in window)
+[2026-06-25 19:24:54] Backing off for 2s before restart (crash 1/5)
+[2026-06-25 19:24:54] ALERT: Claude Session Crashed — Restarting in 2s (attempt 1/5) — /Users/dhanushchilakala/home/c/speffz-lettering
+[2026-06-25 19:24:56] Starting Claude session in /Users/dhanushchilakala/home/c/speffz-lettering
+[2026-06-25 19:24:56] Claude started (PID 88255)
+You've hit your monthly spend limit · raise it at claude.ai/settings/usage
+[2026-06-25 19:24:58] Claude exited with code 1
+[2026-06-25 19:24:58] Crash detected (count: 2 in window)
+[2026-06-25 19:24:58] Backing off for 5s before restart (crash 2/5)
+[2026-06-25 19:24:58] ALERT: Claude Session Crashed — Restarting in 5s (attempt 2/5) — /Users/dhanushchilakala/home/c/speffz-lettering
+[2026-06-25 19:25:03] Starting Claude session in /Users/dhanushchilakala/home/c/speffz-lettering
+[2026-06-25 19:25:03] Claude started (PID 88464)
+You've hit your monthly spend limit · raise it at claude.ai/settings/usage
+[2026-06-25 19:25:11] Claude exited with code 1
+[2026-06-25 19:25:11] Crash detected (count: 3 in window)
+[2026-06-25 19:25:11] Backing off for 10s before restart (crash 3/5)
+[2026-06-25 19:25:11] ALERT: Claude Session Crashed — Restarting in 10s (attempt 3/5) — /Users/dhanushchilakala/home/c/speffz-lettering
+[2026-06-25 19:25:21] Starting Claude session in /Users/dhanushchilakala/home/c/speffz-lettering
+[2026-06-25 19:25:21] Claude started (PID 88694)
+You've hit your monthly spend limit · raise it at claude.ai/settings/usage
+[2026-06-25 19:25:25] Claude exited with code 1
+[2026-06-25 19:25:25] Crash detected (count: 4 in window)
+[2026-06-25 19:25:25] Backing off for 30s before restart (crash 4/5)
+[2026-06-25 19:25:25] ALERT: Claude Session Crashed — Restarting in 30s (attempt 4/5) — /Users/dhanushchilakala/home/c/speffz-lettering
+[2026-06-25 19:25:55] Starting Claude session in /Users/dhanushchilakala/home/c/speffz-lettering
+[2026-06-25 19:25:55] Claude started (PID 89076)
+You've hit your monthly spend limit · raise it at claude.ai/settings/usage
+[2026-06-25 19:26:04] Claude exited with code 1
+[2026-06-25 19:26:04] Crash detected (count: 5 in window)
+[2026-06-25 19:26:04] ALERT: Claude Watchdog — Crash Loop Detected — Claude has crashed 5 times in 10 minutes in /Users/dhanushchilakala/home/c/speffz-lettering. Watchdog is stopping. Check /Users/dhanushchilakala/home/c/speffz-lettering/.claude/handoff/watchdog.log for details. You may want to manually save your session state.
+[2026-06-25 19:26:04] CRASH LOOP: Stopping watchdog. Manual intervention required.
+[2026-06-25 19:26:04] To manually save state, start Claude and run: /handoff save
+[2026-06-25 19:26:04] To restart the watchdog, remove /Users/dhanushchilakala/home/c/speffz-lettering/.claude/handoff/watchdog.pid and start a new Claude session.
+[2026-06-25 19:26:04] Watchdog shutting down (PID 87009)
