@@ -97,7 +97,7 @@ const MODE_META: Record<
     title: "Face Drill",
     hint: "Fill in all four letters for the face",
     accent: "var(--face-l)",
-    glow: "255 122 24",
+    glow: "232 89 12",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4.5 w-4.5" aria-hidden>
         <rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.6" />
@@ -848,7 +848,7 @@ export default function CubeTrainer() {
 function CubeMark({ className }: { className?: string }) {
   return (
     <span
-      className={`relative inline-flex items-center justify-center rounded-xl border border-line-strong bg-[radial-gradient(120%_120%_at_50%_0%,var(--surface-2),var(--surface-0))] shadow-[0_8px_22px_-12px_rgb(63_185_80/0.8)] ${className ?? ""}`}
+      className={`relative inline-flex items-center justify-center rounded-xl border border-line-strong bg-[radial-gradient(120%_120%_at_50%_0%,var(--surface-2),var(--surface-0))] shadow-[0_8px_22px_-12px_rgba(0,0,0,0.85)] ${className ?? ""}`}
       aria-hidden
     >
       <span className="grid grid-cols-2 gap-[3px]">

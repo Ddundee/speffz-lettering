@@ -20,8 +20,9 @@ const FACE_NAMES: Record<Face, string> = {
   L: "Left",
 };
 
-/** Faces whose colors are light enough to need dark foreground text. */
-const LIGHT_FACES: Face[] = ["U", "D"];
+/** Faces that take dark chip text for WCAG-AA contrast (white text fails on
+ *  these: white #ffffff, yellow #ffd500, and orange #e8590c). */
+const LIGHT_FACES: Face[] = ["U", "D", "L"];
 
 interface FaceDrillProps {
   face: Face;

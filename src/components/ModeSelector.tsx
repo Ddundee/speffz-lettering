@@ -37,7 +37,7 @@ const MODES: ModeMeta[] = [
     description: "Fill in all four letters for a face",
     shortcut: "3",
     accent: "var(--face-l)",
-    glow: "255 122 24",
+    glow: "232 89 12",
     icon: GridIcon,
   },
 ];
