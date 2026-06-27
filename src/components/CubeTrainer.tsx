@@ -41,8 +41,16 @@ import type {
 const RubiksCube3D = dynamic(() => import("@/components/RubiksCube3D"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full min-h-[280px] items-center justify-center rounded-2xl bg-slate-900 text-slate-400 sm:min-h-[320px]">
-      Loading cube…
+    <div className="flex h-full min-h-[280px] flex-col items-center justify-center gap-3 rounded-3xl border border-line-strong bg-[radial-gradient(120%_120%_at_50%_0%,#1c1c1f_0%,#050506_70%)] text-muted sm:min-h-[320px]">
+      <span className="flex h-10 w-10 animate-[float-soft_2s_ease-in-out_infinite] items-center justify-center rounded-xl border border-line-strong bg-surface-2">
+        <span className="grid grid-cols-2 gap-0.5">
+          <span className="h-2 w-2 rounded-[2px] bg-face-f" />
+          <span className="h-2 w-2 rounded-[2px] bg-face-r" />
+          <span className="h-2 w-2 rounded-[2px] bg-face-b" />
+          <span className="h-2 w-2 rounded-[2px] bg-face-d" />
+        </span>
+      </span>
+      <span className="text-sm">Loading cube…</span>
     </div>
   ),
 });
@@ -54,6 +62,51 @@ const MODE_SHORTCUTS: Record<string, TrainingMode> = {
   "1": "find-letter",
   "2": "name-sticker",
   "3": "face-drill",
+};
+
+const MODE_META: Record<
+  TrainingMode,
+  { title: string; hint: string; accent: string; glow: string; icon: React.ReactNode }
+> = {
+  "find-letter": {
+    title: "Find the Letter",
+    hint: "Click the sticker that matches the prompt",
+    accent: "var(--brand)",
+    glow: "63 185 80",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4.5 w-4.5" aria-hidden>
+        <circle cx="12" cy="12" r="8" />
+        <circle cx="12" cy="12" r="3.2" />
+        <path strokeLinecap="round" d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+      </svg>
+    ),
+  },
+  "name-sticker": {
+    title: "Name the Sticker",
+    hint: "Type the letter for the highlighted sticker",
+    accent: "var(--face-b)",
+    glow: "37 99 235",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4.5 w-4.5" aria-hidden>
+        <rect x="2.5" y="6" width="19" height="12" rx="2.5" />
+        <path strokeLinecap="round" d="M7 10h0M11 10h0M15 10h0M8.5 14h7" />
+      </svg>
+    ),
+  },
+  "face-drill": {
+    title: "Face Drill",
+    hint: "Fill in all four letters for the face",
+    accent: "var(--face-l)",
+    glow: "249 115 22",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4.5 w-4.5" aria-hidden>
+        <rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.6" />
+        <rect x="13" y="3.5" width="7.5" height="7.5" rx="1.6" />
+        <rect x="3.5" y="13" width="7.5" height="7.5" rx="1.6" />
+        <rect x="13" y="13" width="7.5" height="7.5" rx="1.6" />
+      </svg>
+    ),
+  },
 };
 
 export default function CubeTrainer() {
@@ -184,6 +237,26 @@ export default function CubeTrainer() {
     const id = window.setTimeout(() => setTimerSeconds((s) => (s !== null ? s - 1 : null)), 1000);
     return () => clearTimeout(id);
   }, [timedMode, timerSeconds, endTimedRound]);
+
+  // Keep the Name-the-Sticker input focused for uninterrupted keyboard-only
+  // practice. The input stays mounted and is only temporarily disabled during
+  // feedback, so refocus it whenever a new prompt re-enables it. Only steal
+  // focus when that input is the active prompt — not in other modes, and not
+  // while the settings drawer or the timed summary is up.
+  //
+  // `settingsOpen` is intentionally read by the guard but kept OUT of the
+  // dependency array: while the drawer is open, the effect must not steal
+  // focus, but *closing* it must not re-run the effect either — otherwise we'd
+  // refocus the input and clobber SettingsPanel's restore-focus-to-the-gear
+  // contract. The guard never goes stale: every legitimate refocus (new prompt
+  // → targetSticker.id change, or feedback unlock → inputLocked change) re-runs
+  // the effect via a listed dep, re-reading the then-current `settingsOpen`.
+  useEffect(() => {
+    if (mode !== "name-sticker" || inputLocked) return;
+    if (settingsOpen || timedSummary) return;
+    letterInputRef.current?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- settingsOpen omitted by design (see above)
+  }, [mode, inputLocked, timedSummary, targetSticker?.id]);
 
   const recordAttempt = useCallback(
     (letter: string, correct: boolean) => {
@@ -485,41 +558,49 @@ export default function CubeTrainer() {
 
   if (!stats || !settings) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-400">
-        Loading trainer…
+      <div className="flex min-h-screen items-center justify-center text-muted">
+        <div className="flex flex-col items-center gap-3">
+          <CubeMark className="h-10 w-10 animate-[float-soft_2s_ease-in-out_infinite]" />
+          <span className="text-sm">Loading trainer…</span>
+        </div>
       </div>
     );
   }
 
+  const activeMode = MODE_META[mode];
+
   return (
-    <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
-      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
-                  Blind Cube Letter Trainer
-                </h1>
-                <p className="text-sm text-slate-400">
-                  Speffz lettering for blindfolded 3×3 solving
-                </p>
+    <div className="flex min-h-screen flex-col lg:h-dvh lg:min-h-[700px] lg:overflow-hidden">
+      <header className="sticky top-0 z-30 shrink-0 border-b border-line bg-surface-1/80 backdrop-blur-xl backdrop-saturate-150">
+        <div className="mx-auto max-w-7xl px-4 py-2 sm:px-6">
+          <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <CubeMark className="h-10 w-10 shrink-0" />
+                <div>
+                  <h1 className="text-lg font-extrabold leading-none tracking-tight sm:text-xl">
+                    <span className="text-sheen">Speffz Trainer</span>
+                  </h1>
+                  <p className="mt-1 text-xs text-muted sm:text-[13px]">
+                    Blind cube lettering for 3×3 BLD &amp; Old Pochmann
+                  </p>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setSettingsOpen(true)}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-slate-600 hover:text-white lg:hidden"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-line bg-surface-2/60 text-muted transition-colors hover:border-line-strong hover:text-white lg:hidden"
                 aria-label="Open settings"
               >
                 <GearIcon />
               </button>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 lg:flex-nowrap">
               <ModeSelector mode={mode} onChange={handleModeChange} />
               <button
                 type="button"
                 onClick={() => setSettingsOpen(true)}
-                className="hidden h-11 items-center gap-2 rounded-xl border border-slate-700 bg-slate-800 px-3 text-sm text-slate-300 hover:border-slate-600 hover:text-white lg:flex"
+                className="hidden h-11 items-center gap-2 rounded-xl border border-line bg-surface-2/60 px-3.5 text-sm font-medium text-muted transition-colors hover:border-line-strong hover:text-white lg:flex"
                 aria-label="Open settings"
               >
                 <GearIcon />
@@ -530,39 +611,50 @@ export default function CubeTrainer() {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-4 sm:px-6 sm:py-6">
-        <div className="mb-4 flex flex-wrap gap-2">
-          <ControlButton onClick={handleNewRound}>New Round (N)</ControlButton>
-          <ControlButton onClick={() => setResetViewToken((t) => t + 1)}>
-            Reset View (R)
+      <main className="relative mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col px-4 py-4 sm:px-6 lg:overflow-hidden lg:py-3">
+        <div className="mb-3 flex shrink-0 flex-wrap gap-2 lg:mb-2">
+          <ControlButton onClick={handleNewRound} icon="refresh" hint="N">
+            New Round
           </ControlButton>
-          <ControlButton active={effectiveShowLetters} onClick={handleToggleLetters}>
-            {effectiveShowLetters ? "Hide Letters (L)" : "Show Letters (L)"}
+          <ControlButton onClick={() => setResetViewToken((t) => t + 1)} icon="view" hint="R">
+            Reset View
+          </ControlButton>
+          <ControlButton active={effectiveShowLetters} pressed={effectiveShowLetters} onClick={handleToggleLetters} icon="eye" hint="L">
+            {effectiveShowLetters ? "Hide Letters" : "Show Letters"}
             {lettersOverridden && (
-              <span className="ml-1 text-xs opacity-70">session</span>
+              <span className="ml-1 rounded bg-white/10 px-1 text-[10px] font-semibold uppercase tracking-wide opacity-80">
+                session
+              </span>
             )}
           </ControlButton>
-          <ControlButton active={timedMode} onClick={handleToggleTimedMode}>
-            60s Timed (T)
+          <ControlButton active={timedMode} pressed={timedMode} onClick={handleToggleTimedMode} icon="timer" hint="T">
+            60s Timed
           </ControlButton>
-          <ControlButton variant="danger" onClick={handleResetStats}>
+          <ControlButton variant="danger" onClick={handleResetStats} icon="trash">
             Reset Stats
           </ControlButton>
-          <ControlButton onClick={() => setShortcutsOpen((v) => !v)}>
-            Shortcuts (?)
+          <ControlButton pressed={shortcutsOpen} onClick={() => setShortcutsOpen((v) => !v)} icon="keyboard" hint="?">
+            Shortcuts
           </ControlButton>
         </div>
 
         {weakLetterFilter && (
-          <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-100">
+          <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-brand/30 bg-brand/10 px-4 py-3 text-sm text-foreground animate-fade-in-up">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand/20 text-brand">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" />
+              </svg>
+            </span>
             <span>
-              Practicing weak letters:{" "}
-              <span className="font-mono font-bold">{weakLetterFilter.join(" ")}</span>
+              Drilling weak letters:{" "}
+              <span className="font-mono font-bold tracking-widest text-brand">
+                {weakLetterFilter.join(" ")}
+              </span>
             </span>
             <button
               type="button"
               onClick={() => setWeakLetterFilter(null)}
-              className="min-h-11 rounded-lg bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white"
+              className="ml-auto min-h-11 rounded-lg border border-line bg-surface-2/60 px-3 py-1.5 text-xs font-semibold text-muted transition-colors hover:text-white"
             >
               Clear filter
             </button>
@@ -571,9 +663,14 @@ export default function CubeTrainer() {
 
         {shortcutsOpen && <ShortcutLegend onClose={() => setShortcutsOpen(false)} />}
 
-        <div className="grid flex-1 gap-4 sm:gap-6 lg:grid-cols-2">
-          <section className="order-1 min-h-0 space-y-3">
-            <div className="h-[280px] sm:h-[360px] md:h-[420px] lg:h-[480px]">
+        <div className="grid min-h-0 flex-1 gap-4 sm:gap-6 lg:overflow-hidden lg:grid-cols-[1.15fr_1fr]">
+          <section className="order-1 flex min-h-0 flex-col gap-3">
+            <div className="relative h-[300px] min-h-0 flex-1 sm:h-[380px] md:h-[440px] lg:h-auto">
+              {timedMode && (
+                <div className="absolute right-3 top-3 z-20">
+                  <TimerBadge seconds={timerSeconds} />
+                </div>
+              )}
               <RubiksCube3D
                 onStickerClick={handleStickerClick}
                 highlights={highlights}
@@ -585,40 +682,67 @@ export default function CubeTrainer() {
             </div>
           </section>
 
-          <section className="order-2 flex min-h-0 flex-col space-y-4 sm:space-y-5">
-            <div className="rounded-2xl border border-slate-700 bg-slate-900/60 p-4 sm:p-5">
+          <section className="order-2 flex min-h-0 flex-col gap-3 lg:overflow-hidden">
+            <div className="glass-raised scroll-slim shrink-0 rounded-3xl p-4 lg:max-h-[70%] lg:overflow-y-auto">
+              <div className="mb-3 flex items-center gap-2.5">
+                <span
+                  className="flex h-8 w-8 items-center justify-center rounded-lg"
+                  style={{
+                    background: `rgb(${activeMode.glow} / 0.16)`,
+                    color: activeMode.accent,
+                  }}
+                >
+                  {activeMode.icon}
+                </span>
+                <div>
+                  <p className="text-[13px] font-bold leading-tight text-white">
+                    {activeMode.title}
+                  </p>
+                  <p className="text-[11px] leading-tight text-faint">
+                    {activeMode.hint}
+                  </p>
+                </div>
+              </div>
+
               {mode !== "face-drill" && (
                 <FilterBar filter={filter} onChange={setFilter} />
               )}
 
               {mode === "face-drill" && (
-                <label className="mt-3 flex min-h-11 cursor-pointer items-center gap-3 text-sm text-slate-300">
+                <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-line bg-surface-0/50 px-3 py-2 text-sm text-muted transition-colors hover:border-line-strong">
                   <input
                     type="checkbox"
                     checked={practiceAllFaces}
                     onChange={(e) => setPracticeAllFaces(e.target.checked)}
-                    className="h-5 w-5 rounded border-slate-600"
+                    className="h-5 w-5 rounded border-line-strong accent-[var(--brand)]"
                   />
                   Practice all faces (random order)
                 </label>
               )}
 
               <div
-                className={`mt-4 rounded-xl border p-4 transition-all sm:mt-5 ${
+                className={`mt-3 rounded-2xl border p-3.5 transition-all ${
                   feedback === "correct"
-                    ? "border-emerald-500/50 bg-emerald-500/10 animate-pulse-once"
+                    ? "animate-pulse-once border-good/50 bg-good/10"
                     : feedback === "incorrect"
-                      ? "border-rose-500/50 bg-rose-500/10 animate-shake"
-                      : "border-slate-700 bg-slate-800/40"
+                      ? "animate-shake border-bad/50 bg-bad/10"
+                      : "border-line bg-surface-0/50"
                 }`}
               >
                 {mode === "find-letter" && (
-                  <div>
-                    <p className="text-sm text-slate-400">Find the letter</p>
-                    <p className="mt-1 text-4xl font-bold text-cyan-300">
-                      {targetLetter || "—"}
+                  <div className="flex flex-col items-center py-1 text-center">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-faint">
+                      Find the letter
                     </p>
-                    <p className="mt-2 text-sm text-slate-500">
+                    <div
+                      key={targetLetter || "empty"}
+                      className="mt-2.5 flex h-[clamp(5rem,12vh,6rem)] w-[clamp(5rem,12vh,6rem)] animate-pop-in items-center justify-center rounded-3xl border border-line-strong bg-[radial-gradient(120%_120%_at_50%_0%,var(--surface-2),var(--surface-0))] shadow-[0_18px_40px_-22px_rgb(63_185_80/0.7)]"
+                    >
+                      <span className="bg-gradient-to-b from-white to-brand bg-clip-text font-mono text-5xl font-black text-transparent">
+                        {targetLetter || "—"}
+                      </span>
+                    </div>
+                    <p className="mt-2.5 text-sm text-muted">
                       Click the matching sticker on the cube
                     </p>
                   </div>
@@ -626,30 +750,32 @@ export default function CubeTrainer() {
 
                 {mode === "name-sticker" && (
                   <div>
-                    <p className="text-sm text-slate-400">Name the highlighted sticker</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-faint">
+                      Name the highlighted sticker
+                    </p>
                     <input
                       ref={letterInputRef}
                       type="text"
                       value={letterInput}
                       disabled={inputLocked}
                       maxLength={1}
-                      placeholder="Type letter…"
+                      placeholder="?"
                       onChange={(e) =>
                         setLetterInput(e.target.value.slice(-1).toUpperCase())
                       }
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleLetterSubmit();
                       }}
-                      className="mt-3 min-h-11 w-full rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-3xl font-bold uppercase text-white outline-none focus:border-cyan-400"
+                      className="mt-3 min-h-11 w-full rounded-2xl border border-line-strong bg-surface-0/60 px-4 py-4 text-center font-mono text-5xl font-black uppercase tracking-widest text-white outline-none transition-colors placeholder:text-faint focus:border-brand focus:ring-2 focus:ring-brand/25"
                       autoFocus
                     />
                     <button
                       type="button"
                       disabled={inputLocked || !letterInput}
                       onClick={handleLetterSubmit}
-                      className="mt-3 min-h-11 w-full rounded-xl bg-cyan-500 py-3 font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"
+                      className="mt-3 min-h-11 w-full rounded-xl bg-gradient-to-r from-brand to-brand-strong py-3 font-semibold text-surface-0 shadow-lg shadow-brand/20 transition-all hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:from-surface-3 disabled:to-surface-3 disabled:text-faint disabled:shadow-none"
                     >
-                      Submit (Enter)
+                      Submit <span className="opacity-70">(Enter)</span>
                     </button>
                   </div>
                 )}
@@ -667,10 +793,11 @@ export default function CubeTrainer() {
 
                 {feedbackMessage && (
                   <p
-                    className={`mt-4 text-sm font-medium ${
-                      feedback === "correct" ? "text-emerald-300" : "text-rose-300"
+                    className={`mt-4 flex items-center gap-2 text-sm font-medium ${
+                      feedback === "correct" ? "text-good" : "text-bad"
                     }`}
                   >
+                    <span aria-hidden>{feedback === "correct" ? "✓" : "✕"}</span>
                     {feedbackMessage}
                   </p>
                 )}
@@ -693,13 +820,17 @@ export default function CubeTrainer() {
         </div>
       </main>
 
-      <footer className="border-t border-slate-800 bg-slate-900/50 px-4 py-2 text-center text-xs text-slate-500 sm:px-6">
+      <footer className="border-t border-line px-4 py-3 text-center text-xs text-faint sm:px-6 lg:hidden">
         <button
           type="button"
           onClick={() => setShortcutsOpen((v) => !v)}
-          className="min-h-11 px-2 hover:text-slate-300"
+          className="min-h-11 rounded-lg px-3 transition-colors hover:text-muted"
         >
-          Press <kbd className="rounded bg-slate-800 px-1">?</kbd> for keyboard shortcuts
+          Press{" "}
+          <kbd className="rounded border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-brand">
+            ?
+          </kbd>{" "}
+          for keyboard shortcuts
         </button>
       </footer>
 
@@ -709,6 +840,44 @@ export default function CubeTrainer() {
         onClose={() => setSettingsOpen(false)}
         onChange={persistSettings}
       />
+    </div>
+  );
+}
+
+/** Brand mark — a stylized cube using the six face colors. */
+function CubeMark({ className }: { className?: string }) {
+  return (
+    <span
+      className={`relative inline-flex items-center justify-center rounded-xl border border-line-strong bg-[radial-gradient(120%_120%_at_50%_0%,var(--surface-2),var(--surface-0))] shadow-[0_8px_22px_-12px_rgba(0,0,0,0.85)] ${className ?? ""}`}
+      aria-hidden
+    >
+      <span className="grid grid-cols-2 gap-[3px]">
+        <span className="h-2.5 w-2.5 rounded-[3px] bg-face-f shadow-[0_0_6px_-1px_var(--face-f)]" />
+        <span className="h-2.5 w-2.5 rounded-[3px] bg-face-r shadow-[0_0_6px_-1px_var(--face-r)]" />
+        <span className="h-2.5 w-2.5 rounded-[3px] bg-face-b shadow-[0_0_6px_-1px_var(--face-b)]" />
+        <span className="h-2.5 w-2.5 rounded-[3px] bg-face-d shadow-[0_0_6px_-1px_var(--face-d)]" />
+      </span>
+    </span>
+  );
+}
+
+/** Floating countdown badge shown over the cube in timed mode. */
+function TimerBadge({ seconds }: { seconds: number | null | undefined }) {
+  const value = seconds !== null && seconds !== undefined ? seconds : null;
+  const low = value !== null && value <= 10;
+  return (
+    <div
+      className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-bold tabular-nums backdrop-blur-sm ${
+        low
+          ? "border-bad/50 bg-bad/15 text-bad"
+          : "border-warn/40 bg-black/45 text-warn"
+      }`}
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden>
+        <circle cx="12" cy="13" r="8" />
+        <path strokeLinecap="round" d="M12 9v4l2.5 2M9 2h6" />
+      </svg>
+      {value !== null ? `${value}s` : "—"}
     </div>
   );
 }
@@ -753,26 +922,33 @@ function ShortcutLegend({ onClose }: { onClose: () => void }) {
   ];
 
   return (
-    <div className="mb-4 rounded-xl border border-slate-700 bg-slate-900/80 p-4">
+    <div className="glass-raised scroll-slim mb-4 max-h-[70vh] overflow-y-auto rounded-2xl p-4 animate-fade-in-up sm:p-5 lg:absolute lg:right-6 lg:top-16 lg:z-40 lg:mb-0 lg:max-h-[calc(100%-5rem)] lg:w-[min(42rem,calc(100%-3rem))]">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+        <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-faint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 text-brand" aria-hidden>
+            <rect x="2.5" y="6" width="19" height="12" rx="2.5" />
+            <path strokeLinecap="round" d="M7 10h0M11 10h0M15 10h0M8.5 14h7" />
+          </svg>
           Keyboard shortcuts
         </h3>
         <button
           type="button"
           onClick={onClose}
-          className="min-h-11 rounded-lg px-3 text-xs text-slate-500 hover:text-white"
+          className="min-h-11 rounded-lg border border-line bg-surface-2/60 px-3 text-xs font-medium text-muted transition-colors hover:text-white"
         >
           Close
         </button>
       </div>
       <dl className="grid gap-2 sm:grid-cols-2">
         {shortcuts.map(([key, desc]) => (
-          <div key={key} className="flex items-center gap-3 text-sm">
-            <kbd className="min-w-[4rem] rounded bg-slate-800 px-2 py-1 text-center font-mono text-xs text-cyan-200">
+          <div
+            key={key}
+            className="flex items-center gap-3 rounded-lg border border-line bg-surface-0/40 px-3 py-1.5 text-sm"
+          >
+            <kbd className="min-w-[4.25rem] rounded-md border border-line bg-surface-2 px-2 py-1 text-center font-mono text-xs font-semibold text-brand">
               {key}
             </kbd>
-            <span className="text-slate-400">{desc}</span>
+            <span className="text-muted">{desc}</span>
           </div>
         ))}
       </dl>
@@ -793,26 +969,83 @@ function FilterBar({
     { id: "corners", label: "Corners" },
   ];
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="w-full text-xs uppercase tracking-wide text-slate-500 sm:w-auto">
+    <div className="flex items-center gap-2">
+      <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-faint">
         Filter
       </span>
-      {options.map((o) => (
-        <button
-          key={o.id}
-          type="button"
-          onClick={() => onChange(o.id)}
-          className={`min-h-11 rounded-lg px-4 py-2 text-sm ${
-            filter === o.id
-              ? "bg-cyan-500/20 text-cyan-200"
-              : "bg-slate-800 text-slate-400 hover:text-white"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
+      <div className="inline-flex flex-1 rounded-xl border border-line bg-surface-0/60 p-1">
+        {options.map((o) => (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => onChange(o.id)}
+            aria-pressed={filter === o.id}
+            className={`min-h-11 flex-1 rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
+              filter === o.id
+                ? "bg-brand/15 text-brand shadow-[0_0_0_1px_rgb(63_185_80/0.4)_inset]"
+                : "text-muted hover:text-white"
+            }`}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
+}
+
+type ControlIcon = "refresh" | "view" | "eye" | "timer" | "trash" | "keyboard";
+
+function ControlGlyph({ name }: { name: ControlIcon }) {
+  const common = {
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    className: "h-4 w-4",
+    "aria-hidden": true,
+  } as const;
+  switch (name) {
+    case "refresh":
+      return (
+        <svg {...common}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-2.64-6.36M21 3v5h-5" />
+        </svg>
+      );
+    case "view":
+      return (
+        <svg {...common}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3a9 9 0 100 18 9 9 0 000-18zM3.6 9h16.8M3.6 15h16.8M12 3c2.5 2.4 2.5 15.6 0 18M12 3c-2.5 2.4-2.5 15.6 0 18" />
+        </svg>
+      );
+    case "eye":
+      return (
+        <svg {...common}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+          <circle cx="12" cy="12" r="2.6" />
+        </svg>
+      );
+    case "timer":
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="13" r="8" />
+          <path strokeLinecap="round" d="M12 9v4l2.5 2M9 2h6" />
+        </svg>
+      );
+    case "trash":
+      return (
+        <svg {...common}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13" />
+        </svg>
+      );
+    case "keyboard":
+      return (
+        <svg {...common}>
+          <rect x="2.5" y="6" width="19" height="12" rx="2.5" />
+          <path strokeLinecap="round" d="M7 10h0M11 10h0M15 10h0M8.5 14h7" />
+        </svg>
+      );
+  }
 }
 
 function ControlButton({
@@ -820,24 +1053,43 @@ function ControlButton({
   onClick,
   active,
   variant,
+  icon,
+  hint,
+  pressed,
 }: {
   children: React.ReactNode;
   onClick: () => void;
   active?: boolean;
   variant?: "danger";
+  icon?: ControlIcon;
+  hint?: string;
+  pressed?: boolean;
 }) {
   const base =
-    "min-h-11 rounded-lg border px-3 py-2 text-sm font-medium transition";
+    "group inline-flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-all active:scale-[0.98]";
   const classes =
     variant === "danger"
-      ? `${base} border-rose-800 bg-rose-950/50 text-rose-200 hover:bg-rose-900/50`
+      ? `${base} border-bad/30 bg-bad/5 text-bad hover:border-bad/50 hover:bg-bad/10`
       : active
-        ? `${base} border-cyan-500/50 bg-cyan-500/15 text-cyan-100`
-        : `${base} border-slate-700 bg-slate-800 text-slate-300 hover:border-slate-600 hover:text-white`;
+        ? `${base} border-brand/50 bg-brand/15 text-brand shadow-[0_0_18px_-8px_rgb(63_185_80/0.9)]`
+        : `${base} border-line bg-surface-2/50 text-muted hover:border-line-strong hover:text-white`;
 
   return (
-    <button type="button" onClick={onClick} className={classes}>
-      {children}
+    <button type="button" onClick={onClick} className={classes} aria-pressed={pressed}>
+      {icon && <ControlGlyph name={icon} />}
+      <span className="flex items-center">{children}</span>
+      {hint && (
+        <kbd
+          className={`hidden h-5 min-w-5 items-center justify-center rounded border px-1 font-mono text-[10px] sm:flex ${
+            active
+              ? "border-brand/40 bg-brand/10 text-brand"
+              : "border-line bg-surface-0/70 text-faint"
+          }`}
+          aria-hidden
+        >
+          {hint}
+        </kbd>
+      )}
     </button>
   );
 }
@@ -850,67 +1102,72 @@ function TimedSummaryCard({
   onDismiss: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-br from-amber-500/15 to-slate-900/80 p-5 shadow-lg">
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="text-lg font-bold text-amber-100">Timed Round Complete</h3>
-        <span className="rounded-full bg-amber-500/20 px-3 py-1 text-sm font-bold text-amber-200">
+    <div className="relative overflow-hidden rounded-3xl border border-warn/40 bg-[linear-gradient(160deg,rgb(251_191_36/0.16),var(--surface-0))] p-5 shadow-[0_24px_60px_-30px_rgb(251_191_36/0.7)] animate-pop-in">
+      <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-warn/15 blur-3xl" />
+      <div className="relative flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-warn/20 text-warn">
+            <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden>
+              <path d="M5 4h14v3a5 5 0 01-3 4.58A4 4 0 0113 14.9V17h2.5a1 1 0 011 1v1.5h-9V18a1 1 0 011-1H11v-2.1a4 4 0 01-3-3.32A5 5 0 015 7V4z" />
+            </svg>
+          </span>
+          <h3 className="text-lg font-extrabold text-white">Round Complete</h3>
+        </div>
+        <span className="rounded-full bg-warn/20 px-3 py-1 text-sm font-bold tabular-nums text-warn">
           {summary.accuracy}% acc
         </span>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="relative mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         <SummaryStat label="Score" value={String(summary.score)} large />
         <SummaryStat label="Accuracy" value={`${summary.accuracy}%`} />
-        <SummaryStat
-          label="Missed"
-          value={String(summary.missedLetters.length)}
-        />
+        <SummaryStat label="Missed" value={String(summary.missedLetters.length)} />
         <SummaryStat
           label="Slowest"
-          value={
-            summary.slowestLetters[0]
-              ? summary.slowestLetters[0].letter
-              : "—"
-          }
+          value={summary.slowestLetters[0] ? summary.slowestLetters[0].letter : "—"}
         />
       </div>
 
       {summary.missedLetters.length > 0 && (
-        <div className="mt-4 rounded-xl border border-amber-500/20 bg-slate-900/50 p-3">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Missed letters</p>
-          <p className="mt-1 font-mono text-xl font-bold tracking-widest text-white">
+        <div className="relative mt-4 rounded-2xl border border-warn/20 bg-surface-0/60 p-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-faint">
+            Missed letters
+          </p>
+          <p className="mt-1.5 font-mono text-xl font-bold tracking-[0.3em] text-white">
             {summary.missedLetters.join(" ")}
           </p>
         </div>
       )}
 
       {summary.slowestLetters.length > 0 && (
-        <div className="mt-3">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Slowest responses</p>
-          <ul className="mt-2 space-y-1">
+        <div className="relative mt-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-faint">
+            Slowest responses
+          </p>
+          <ul className="mt-2 space-y-1.5">
             {summary.slowestLetters.map(({ letter, avgMs }) => (
               <li
                 key={letter}
-                className="flex justify-between text-sm text-slate-300"
+                className="flex items-center justify-between rounded-lg border border-line bg-surface-0/50 px-3 py-1.5 text-sm text-muted"
               >
                 <span className="font-mono font-bold text-white">{letter}</span>
-                <span>{(avgMs / 1000).toFixed(1)}s avg</span>
+                <span className="tabular-nums">{(avgMs / 1000).toFixed(1)}s avg</span>
               </li>
             ))}
           </ul>
         </div>
       )}
 
-      <p className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-sm leading-relaxed text-amber-50/90">
+      <p className="relative mt-4 rounded-xl border border-warn/20 bg-warn/5 p-3 text-sm leading-relaxed text-foreground/90">
         {summary.recommendation}
       </p>
 
       <button
         type="button"
         onClick={onDismiss}
-        className="mt-4 min-h-11 w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-400"
+        className="relative mt-4 min-h-11 w-full rounded-xl bg-gradient-to-r from-warn to-amber-400 px-4 py-3 text-sm font-bold text-surface-0 shadow-lg shadow-warn/20 transition-all hover:brightness-110 active:scale-[0.99]"
       >
-        Continue (Esc)
+        Continue <span className="opacity-70">(Esc)</span>
       </button>
     </div>
   );
@@ -926,9 +1183,11 @@ function SummaryStat({
   large?: boolean;
 }) {
   return (
-    <div className="rounded-lg bg-slate-900/60 px-3 py-2">
-      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
-      <div className={`font-bold text-white ${large ? "text-2xl" : "text-lg"}`}>
+    <div className="rounded-xl border border-line bg-surface-0/60 px-3 py-2">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-faint">
+        {label}
+      </div>
+      <div className={`font-bold tabular-nums text-white ${large ? "text-2xl" : "text-lg"}`}>
         {value}
       </div>
     </div>

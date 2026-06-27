@@ -1,8 +1,48 @@
 @import "tailwindcss";
 
+/* ------------------------------------------------------------------ *
+ * Speffz Trainer — design system
+ * Editorial pure-black base (neutral charcoal surfaces) with a single
+ * sophisticated green brand accent, inspired by a dark "anti-normal"
+ * pitch-deck aesthetic. The six Rubik's-cube face colors remain a
+ * functional accent system layered on top.
+ * ------------------------------------------------------------------ */
+
 :root {
-  --background: #020617;
-  --foreground: #f1f5f9;
+  /* Base surfaces — near-pure-black, neutral charcoal, layered
+     (reference: #000 field rising to ~#282829 cards) */
+  --background: #050506;
+  --surface-0: #0b0b0d;
+  --surface-1: #131315;
+  --surface-2: #1c1c1f;
+  --surface-3: #26262a;
+  --foreground: #f4f4f5;
+  --muted: #a1a1aa;
+  /* Quieter than --muted but still clears WCAG-AA (>=4.5:1) on all surfaces
+     for the small ~10-11px labels that use it. */
+  --faint: #90909a;
+  --line: #27272b;
+  --line-strong: #38383e;
+
+  /* Brand accent (interactive / focus) — reference's signature green */
+  --brand: #3fb950;
+  --brand-strong: #2f9e44;
+  --brand-glow: 63 185 80;
+
+  /* Cube face colors (UI-accent variants; physical cube lives in stickers.ts) */
+  --face-u: #f8fafc;
+  --face-d: #ffd500;
+  --face-f: #00b85c;
+  --face-b: #2563eb;
+  --face-r: #e11d48;
+  --face-l: #f97316;
+
+  /* Semantic */
+  --good: #34d399;
+  --good-glow: 52 211 153;
+  --bad: #fb7185;
+  --bad-glow: 251 113 133;
+  --warn: #fbbf24;
 }
 
 @theme inline {
@@ -10,13 +50,94 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Expose the design tokens as Tailwind colors */
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-face-u: var(--face-u);
+  --color-face-d: var(--face-d);
+  --color-face-f: var(--face-f);
+  --color-face-b: var(--face-b);
+  --color-face-r: var(--face-r);
+  --color-face-l: var(--face-l);
+  --color-good: var(--good);
+  --color-bad: var(--bad);
+  --color-warn: var(--warn);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+  /* Ambient depth: restrained green brand glow over the near-black field */
+  background-image:
+    radial-gradient(60rem 60rem at 12% -10%, rgba(63, 185, 80, 0.07), transparent 60%),
+    radial-gradient(50rem 50rem at 100% 0%, rgba(63, 185, 80, 0.05), transparent 55%),
+    radial-gradient(45rem 45rem at 50% 120%, rgba(255, 255, 255, 0.025), transparent 55%);
+  background-attachment: fixed;
 }
+
+input,
+button,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* ------------------------------------------------------------------ *
+ * Reusable surface utilities
+ * ------------------------------------------------------------------ */
+
+.glass {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-1) 92%, transparent),
+    color-mix(in srgb, var(--surface-0) 92%, transparent)
+  );
+  border: 1px solid var(--line);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+}
+
+.glass-raised {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-2) 94%, transparent),
+    color-mix(in srgb, var(--surface-1) 96%, transparent)
+  );
+  border: 1px solid var(--line-strong);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+    0 18px 40px -24px rgba(0, 0, 0, 0.8);
+}
+
+/* Brand-tinted focus ring used across interactive elements */
+.focusable:focus-visible,
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid rgb(var(--brand-glow) / 0.9);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * Motion
+ * ------------------------------------------------------------------ */
 
 @keyframes shake {
   0%,
@@ -35,13 +156,66 @@ body {
 
 @keyframes pulse-once {
   0% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.45);
   }
   70% {
-    box-shadow: 0 0 0 12px rgba(34, 197, 94, 0);
+    box-shadow: 0 0 0 14px rgba(52, 211, 153, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  60% {
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes sheen {
+  0% {
+    background-position: -150% 0;
+  }
+  100% {
+    background-position: 250% 0;
+  }
+}
+
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
   }
 }
 
@@ -53,8 +227,59 @@ body {
   animation: pulse-once 0.8s ease-out;
 }
 
-input,
-button,
-select {
-  font-family: inherit;
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out both;
+}
+
+.animate-pop-in {
+  animation: pop-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Animated brand-gradient text (titles / hero prompt) */
+.text-sheen {
+  background-image: linear-gradient(
+    100deg,
+    var(--foreground) 30%,
+    var(--brand) 50%,
+    var(--foreground) 70%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: sheen 6s linear infinite;
+}
+
+/* Thin, themed scrollbars for inner scroll panes */
+.scroll-slim {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+.scroll-slim::-webkit-scrollbar {
+  width: 8px;
+}
+.scroll-slim::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 9999px;
+}
+.scroll-slim::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
 }
