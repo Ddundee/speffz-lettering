@@ -75,7 +75,7 @@ export default function StatsPanel({
   const practiceLetters = weakest.map((w) => w.letter);
 
   return (
-    <div className="scroll-slim max-h-[70vh] space-y-4 overflow-y-auto pr-1 lg:max-h-none lg:overflow-visible">
+    <div className="scroll-slim min-h-0 max-h-[70vh] flex-1 space-y-3 overflow-y-auto overscroll-contain pr-1 lg:max-h-full">
       {/* Scope toggle */}
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-faint">
@@ -104,7 +104,7 @@ export default function StatsPanel({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         <StatCard label="Streak" value={String(stats.session.currentStreak)} accent="brand" icon="flame" />
         <StatCard label="Best Streak" value={String(stats.session.bestStreak)} />
         <StatCard label="Session Acc." value={`${sessionAccuracy}%`} />
@@ -127,8 +127,8 @@ export default function StatsPanel({
       </div>
 
       {/* Face accuracy */}
-      <div className="glass rounded-2xl p-4">
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-faint">
+      <div className="glass rounded-2xl p-3.5">
+        <h3 className="mb-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-faint">
           Face Accuracy
         </h3>
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
@@ -178,7 +178,7 @@ export default function StatsPanel({
       </div>
 
       {/* Letter accuracy */}
-      <div className="glass rounded-2xl p-4">
+      <div className="glass rounded-2xl p-3.5">
         <button
           type="button"
           onClick={() => setLettersExpanded((v) => !v)}
@@ -330,7 +330,7 @@ function StatCard({
             : "text-white";
 
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-line bg-surface-1/60 p-3 transition-colors hover:border-line-strong">
+    <div className="group relative overflow-hidden rounded-xl border border-line bg-surface-1/60 px-3 py-2.5 transition-colors hover:border-line-strong">
       <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-faint">
         {icon === "flame" && (
           <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 text-brand" aria-hidden>
@@ -339,7 +339,7 @@ function StatCard({
         )}
         {label}
       </div>
-      <div className={`mt-1 text-xl font-bold tabular-nums ${accentClass}`}>{value}</div>
+      <div className={`mt-0.5 text-lg font-bold tabular-nums ${accentClass}`}>{value}</div>
     </div>
   );
 }

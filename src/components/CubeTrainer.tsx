@@ -570,10 +570,10 @@ export default function CubeTrainer() {
   const activeMode = MODE_META[mode];
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-30 border-b border-line bg-surface-1/80 backdrop-blur-xl backdrop-saturate-150">
-        <div className="mx-auto max-w-7xl px-4 py-3.5 sm:px-6">
-          <div className="flex flex-col gap-3.5 lg:flex-row lg:items-center lg:justify-between">
+    <div className="flex min-h-screen flex-col lg:h-dvh lg:min-h-[700px] lg:overflow-hidden">
+      <header className="sticky top-0 z-30 shrink-0 border-b border-line bg-surface-1/80 backdrop-blur-xl backdrop-saturate-150">
+        <div className="mx-auto max-w-7xl px-4 py-2 sm:px-6">
+          <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <CubeMark className="h-10 w-10 shrink-0" />
@@ -611,8 +611,8 @@ export default function CubeTrainer() {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-4 sm:px-6 sm:py-6">
-        <div className="mb-4 flex flex-wrap gap-2">
+      <main className="relative mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col px-4 py-4 sm:px-6 lg:overflow-hidden lg:py-3">
+        <div className="mb-3 flex shrink-0 flex-wrap gap-2 lg:mb-2">
           <ControlButton onClick={handleNewRound} icon="refresh" hint="N">
             New Round
           </ControlButton>
@@ -663,9 +663,9 @@ export default function CubeTrainer() {
 
         {shortcutsOpen && <ShortcutLegend onClose={() => setShortcutsOpen(false)} />}
 
-        <div className="grid flex-1 gap-4 sm:gap-6 lg:grid-cols-[1.15fr_1fr]">
+        <div className="grid min-h-0 flex-1 gap-4 sm:gap-6 lg:overflow-hidden lg:grid-cols-[1.15fr_1fr]">
           <section className="order-1 flex min-h-0 flex-col gap-3">
-            <div className="relative h-[300px] flex-1 sm:h-[380px] md:h-[440px] lg:h-auto lg:min-h-[480px]">
+            <div className="relative h-[300px] min-h-0 flex-1 sm:h-[380px] md:h-[440px] lg:h-auto">
               {timedMode && (
                 <div className="absolute right-3 top-3 z-20">
                   <TimerBadge seconds={timerSeconds} />
@@ -682,9 +682,9 @@ export default function CubeTrainer() {
             </div>
           </section>
 
-          <section className="order-2 flex min-h-0 flex-col space-y-4 sm:space-y-5">
-            <div className="glass-raised rounded-3xl p-4 sm:p-5">
-              <div className="mb-4 flex items-center gap-2.5">
+          <section className="order-2 flex min-h-0 flex-col gap-3 lg:overflow-hidden">
+            <div className="glass-raised scroll-slim shrink-0 rounded-3xl p-4 lg:max-h-[70%] lg:overflow-y-auto">
+              <div className="mb-3 flex items-center gap-2.5">
                 <span
                   className="flex h-8 w-8 items-center justify-center rounded-lg"
                   style={{
@@ -721,7 +721,7 @@ export default function CubeTrainer() {
               )}
 
               <div
-                className={`mt-4 rounded-2xl border p-4 transition-all sm:mt-5 ${
+                className={`mt-3 rounded-2xl border p-3.5 transition-all ${
                   feedback === "correct"
                     ? "animate-pulse-once border-good/50 bg-good/10"
                     : feedback === "incorrect"
@@ -730,19 +730,19 @@ export default function CubeTrainer() {
                 }`}
               >
                 {mode === "find-letter" && (
-                  <div className="flex flex-col items-center py-2 text-center">
+                  <div className="flex flex-col items-center py-1 text-center">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-faint">
                       Find the letter
                     </p>
                     <div
                       key={targetLetter || "empty"}
-                      className="mt-3 flex h-28 w-28 animate-pop-in items-center justify-center rounded-3xl border border-line-strong bg-[radial-gradient(120%_120%_at_50%_0%,var(--surface-2),var(--surface-0))] shadow-[0_18px_40px_-22px_rgb(63_185_80/0.7)]"
+                      className="mt-2.5 flex h-[clamp(5rem,12vh,6rem)] w-[clamp(5rem,12vh,6rem)] animate-pop-in items-center justify-center rounded-3xl border border-line-strong bg-[radial-gradient(120%_120%_at_50%_0%,var(--surface-2),var(--surface-0))] shadow-[0_18px_40px_-22px_rgb(63_185_80/0.7)]"
                     >
-                      <span className="bg-gradient-to-b from-white to-brand bg-clip-text font-mono text-6xl font-black text-transparent">
+                      <span className="bg-gradient-to-b from-white to-brand bg-clip-text font-mono text-5xl font-black text-transparent">
                         {targetLetter || "—"}
                       </span>
                     </div>
-                    <p className="mt-3 text-sm text-muted">
+                    <p className="mt-2.5 text-sm text-muted">
                       Click the matching sticker on the cube
                     </p>
                   </div>
@@ -820,7 +820,7 @@ export default function CubeTrainer() {
         </div>
       </main>
 
-      <footer className="border-t border-line px-4 py-3 text-center text-xs text-faint sm:px-6">
+      <footer className="border-t border-line px-4 py-3 text-center text-xs text-faint sm:px-6 lg:hidden">
         <button
           type="button"
           onClick={() => setShortcutsOpen((v) => !v)}
@@ -922,7 +922,7 @@ function ShortcutLegend({ onClose }: { onClose: () => void }) {
   ];
 
   return (
-    <div className="glass-raised mb-4 rounded-2xl p-4 animate-fade-in-up sm:p-5">
+    <div className="glass-raised scroll-slim mb-4 max-h-[70vh] overflow-y-auto rounded-2xl p-4 animate-fade-in-up sm:p-5 lg:absolute lg:right-6 lg:top-16 lg:z-40 lg:mb-0 lg:max-h-[calc(100%-5rem)] lg:w-[min(42rem,calc(100%-3rem))]">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-faint">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 text-brand" aria-hidden>

@@ -85,7 +85,7 @@ export default function FaceDrill({
   const cellClass = (position: StickerPosition) => {
     const state = feedback?.[position] ?? "idle";
     const base =
-      "min-h-11 min-w-11 h-14 w-14 rounded-2xl border-2 text-center text-2xl font-bold uppercase outline-none transition-all duration-200 sm:h-16 sm:w-16 md:h-[4.5rem] md:w-[4.5rem]";
+      "min-h-11 min-w-11 h-14 w-14 rounded-2xl border-2 text-center text-2xl font-bold uppercase outline-none transition-all duration-200 sm:h-16 sm:w-16";
     if (state === "correct")
       return `${base} border-good bg-good/20 text-good shadow-[0_0_18px_-6px_rgb(52_211_153/0.8)]`;
     if (state === "incorrect")
@@ -97,7 +97,7 @@ export default function FaceDrill({
   const chipText = LIGHT_FACES.includes(face) ? "#0a0a0a" : "#ffffff";
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3">
         <span
           className="flex h-10 w-10 items-center justify-center rounded-xl text-base font-extrabold shadow-md ring-1 ring-black/20"
@@ -144,12 +144,12 @@ export default function FaceDrill({
       </p>
 
       <div
-        className="mx-auto w-fit rounded-2xl border border-line p-4"
+        className="mx-auto w-fit rounded-2xl border border-line p-3"
         style={{
           background: `linear-gradient(160deg, color-mix(in srgb, ${faceColor} 9%, var(--surface-1)), var(--surface-0))`,
         }}
       >
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           <input
             ref={(el) => { inputRefs.current["top-left"] = el ?? undefined; }}
             value={inputs["top-left"]}

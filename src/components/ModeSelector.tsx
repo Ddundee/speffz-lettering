@@ -52,7 +52,7 @@ export default function ModeSelector({ mode, onChange }: ModeSelectorProps) {
     <div
       role="group"
       aria-label="Training mode"
-      className="grid w-full grid-cols-3 gap-1.5 rounded-2xl border border-line bg-surface-0/70 p-1.5 backdrop-blur sm:w-auto sm:gap-2"
+      className="grid w-full grid-cols-3 gap-1.5 rounded-2xl border border-line bg-surface-0/70 p-1 backdrop-blur sm:w-auto sm:gap-2"
     >
       {MODES.map((m) => {
         const active = mode === m.id;
@@ -64,7 +64,7 @@ export default function ModeSelector({ mode, onChange }: ModeSelectorProps) {
             aria-pressed={active}
             onClick={() => onChange(m.id)}
             title={`${m.label} — press ${m.shortcut}`}
-            className={`group relative flex min-h-11 items-center gap-2.5 overflow-hidden rounded-xl px-2.5 py-2 text-left transition-all duration-200 sm:px-3.5 ${
+            className={`group relative flex min-h-11 items-center gap-2 overflow-hidden rounded-xl px-2.5 py-1 text-left transition-all duration-200 sm:px-3 lg:px-2.5 ${
               active
                 ? "text-white shadow-lg"
                 : "text-muted hover:bg-surface-2/60 hover:text-foreground"
@@ -79,7 +79,7 @@ export default function ModeSelector({ mode, onChange }: ModeSelectorProps) {
             }
           >
             <span
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors"
               style={{
                 background: active
                   ? `rgb(${m.glow} / 0.2)`
@@ -95,7 +95,7 @@ export default function ModeSelector({ mode, onChange }: ModeSelectorProps) {
                   {m.label}
                 </span>
               </span>
-              <span className="hidden truncate text-[11px] leading-tight text-faint sm:block">
+              <span className="hidden truncate text-[11px] leading-tight text-faint sm:block lg:hidden">
                 {m.description}
               </span>
             </span>
