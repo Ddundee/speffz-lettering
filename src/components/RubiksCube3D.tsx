@@ -73,7 +73,7 @@ function StickerMesh({
 }: StickerMeshProps) {
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
-  const [clickAnim, setClickAnim] = useState<ClickAnim>("idle");
+  const clickAnimRef = useRef<ClickAnim>("idle");
   const animStartRef = useRef(0);
   const prevHighlight = useRef<StickerHighlight["variant"] | undefined>(undefined);
   const normal = FACE_NORMALS[face];
@@ -105,10 +105,10 @@ function StickerMesh({
     if (highlight === prevHighlight.current) return;
     prevHighlight.current = highlight;
     if (highlight === "incorrect") {
-      setClickAnim("shake");
+      clickAnimRef.current = "shake";
       animStartRef.current = performance.now();
     } else if (highlight === "correct") {
-      setClickAnim("pulse");
+      clickAnimRef.current = "pulse";
       animStartRef.current = performance.now();
     }
   }, [highlight]);
@@ -121,19 +121,20 @@ function StickerMesh({
     let extraScale = 1;
     let shakeX = 0;
 
+    const clickAnim = clickAnimRef.current;
     if (clickAnim !== "idle") {
       const elapsed = (performance.now() - animStartRef.current) / 1000;
       if (clickAnim === "pulse") {
         if (elapsed < 0.35) {
           extraScale = 1 + Math.sin(elapsed * Math.PI / 0.35) * 0.12;
         } else {
-          setClickAnim("idle");
+          clickAnimRef.current = "idle";
         }
       } else if (clickAnim === "shake") {
         if (elapsed < 0.45) {
           shakeX = Math.sin(elapsed * 40) * 0.025 * (1 - elapsed / 0.45);
         } else {
-          setClickAnim("idle");
+          clickAnimRef.current = "idle";
         }
       }
     }
@@ -185,7 +186,7 @@ function StickerMesh({
     (e: ThreeEvent<MouseEvent>) => {
       if (!sticker || disabled || highlight) return;
       e.stopPropagation();
-      setClickAnim("pulse");
+      clickAnimRef.current = "pulse";
       animStartRef.current = performance.now();
       onStickerClick?.(sticker);
     },
