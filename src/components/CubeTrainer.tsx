@@ -298,7 +298,9 @@ function HydratedCubeTrainer() {
   const recordAttempt = useCallback(
     (letter: string, correct: boolean) => {
       if (!stats) return;
-      const timeMs = Date.now() - promptStartRef.current;
+      const now = Date.now();
+      if (promptStartRef.current === 0) promptStartRef.current = now;
+      const timeMs = now - promptStartRef.current;
       roundLettersRef.current.push(letter);
       if (!roundTimesRef.current[letter]) roundTimesRef.current[letter] = [];
       roundTimesRef.current[letter].push(timeMs);
