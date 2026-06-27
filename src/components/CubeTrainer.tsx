@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import dynamic from "next/dynamic";
 import ModeSelector from "@/components/ModeSelector";
 import StatsPanel from "@/components/StatsPanel";
@@ -58,6 +64,10 @@ const RubiksCube3D = dynamic(() => import("@/components/RubiksCube3D"), {
 const FEEDBACK_DELAY_MS = 1200;
 const TIMED_DURATION_SEC = 60;
 
+const subscribeToHydration = () => () => {};
+const getClientHydrationSnapshot = () => true;
+const getServerHydrationSnapshot = () => false;
+
 const MODE_SHORTCUTS: Record<string, TrainingMode> = {
   "1": "find-letter",
   "2": "name-sticker",
@@ -109,10 +119,36 @@ const MODE_META: Record<
   },
 };
 
+interface PromptOverrides {
+  mode?: TrainingMode;
+  pool?: Sticker[];
+  practiceAllFaces?: boolean;
+  drillFace?: Face;
+}
+
+interface TargetPrompt {
+  sticker: Sticker | null;
+  letter: string;
+}
+
 export default function CubeTrainer() {
+  // Keep the server and hydration renders on the same loading fallback before
+  // mounting the client-only localStorage state.
+  const hydrated = useSyncExternalStore(
+    subscribeToHydration,
+    getClientHydrationSnapshot,
+    getServerHydrationSnapshot,
+  );
+
+  if (!hydrated) return <TrainerLoading />;
+
+  return <HydratedCubeTrainer />;
+}
+
+function HydratedCubeTrainer() {
   const [mode, setMode] = useState<TrainingMode>("find-letter");
-  const [stats, setStats] = useState<PersistedStats | null>(null);
-  const [settings, setSettings] = useState<TrainerSettings | null>(null);
+  const [stats, setStats] = useState<PersistedStats>(loadStats);
+  const [settings, setSettings] = useState<TrainerSettings>(loadSettings);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showLettersOverride, setShowLettersOverride] = useState<boolean | null>(null);
   const [filter, setFilter] = useState<StickerFilter>("all");
@@ -129,15 +165,19 @@ export default function CubeTrainer() {
   const roundTimesRef = useRef<Record<string, number[]>>({});
   const roundMissedCountsRef = useRef<Record<string, number>>({});
 
-  const [targetSticker, setTargetSticker] = useState<Sticker | null>(null);
-  const [targetLetter, setTargetLetter] = useState<string>("");
+  const [targetPrompt, setTargetPrompt] = useState<TargetPrompt>(() => {
+    const sticker = pickRandomSticker(filterStickers("all"));
+    return { sticker, letter: sticker.letter };
+  });
+  const targetSticker = targetPrompt.sticker;
+  const targetLetter = targetPrompt.letter;
   const [feedback, setFeedback] = useState<FeedbackState>("idle");
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [highlights, setHighlights] = useState<StickerHighlight[]>([]);
   const [inputLocked, setInputLocked] = useState(false);
 
   const [letterInput, setLetterInput] = useState("");
-  const promptStartRef = useRef<number>(Date.now());
+  const promptStartRef = useRef(0);
   const letterInputRef = useRef<HTMLInputElement>(null);
 
   const [drillFace, setDrillFace] = useState<Face>("U");
@@ -152,11 +192,10 @@ export default function CubeTrainer() {
     : basePool;
 
   const effectiveShowLetters =
-    showLettersOverride ?? (settings ? settingsShowLetters(settings) : false);
+    showLettersOverride ?? settingsShowLetters(settings);
 
   useEffect(() => {
-    setStats(loadStats());
-    setSettings(loadSettings());
+    promptStartRef.current = Date.now();
   }, []);
 
   const persistStats = useCallback((updated: PersistedStats) => {
@@ -171,8 +210,14 @@ export default function CubeTrainer() {
   }, []);
 
   const startNewPrompt = useCallback(
-    (excludeStickerId?: string) => {
-      if (pool.length === 0) return;
+    (excludeStickerId?: string, overrides: PromptOverrides = {}) => {
+      const nextMode = overrides.mode ?? mode;
+      const nextPool = overrides.pool ?? pool;
+      const nextPracticeAllFaces =
+        overrides.practiceAllFaces ?? practiceAllFaces;
+      const nextDrillFace = overrides.drillFace ?? drillFace;
+
+      if (nextPool.length === 0) return;
 
       setFeedback("idle");
       setFeedbackMessage("");
@@ -182,22 +227,19 @@ export default function CubeTrainer() {
       setFaceFeedback(null);
       promptStartRef.current = Date.now();
 
-      if (mode === "find-letter") {
-        const sticker = pickRandomSticker(pool, excludeStickerId);
-        setTargetSticker(sticker);
-        setTargetLetter(sticker.letter);
-      } else if (mode === "name-sticker") {
-        const sticker = pickRandomSticker(pool, excludeStickerId);
-        setTargetSticker(sticker);
-        setTargetLetter(sticker.letter);
+      if (nextMode === "find-letter") {
+        const sticker = pickRandomSticker(nextPool, excludeStickerId);
+        setTargetPrompt({ sticker, letter: sticker.letter });
+      } else if (nextMode === "name-sticker") {
+        const sticker = pickRandomSticker(nextPool, excludeStickerId);
+        setTargetPrompt({ sticker, letter: sticker.letter });
         setHighlights([{ stickerId: sticker.id, variant: "prompt" }]);
       } else {
-        const face = practiceAllFaces
-          ? pickRandomFace(drillFace)
-          : drillFace;
+        const face = nextPracticeAllFaces
+          ? pickRandomFace(nextDrillFace)
+          : nextDrillFace;
         setDrillFace(face);
-        setTargetSticker(null);
-        setTargetLetter("");
+        setTargetPrompt({ sticker: null, letter: "" });
       }
     },
     [mode, pool, practiceAllFaces, drillFace],
@@ -222,11 +264,6 @@ export default function CubeTrainer() {
     };
     persistStats(updated);
   }, [stats, roundCorrect, roundIncorrect, persistStats]);
-
-  useEffect(() => {
-    if (!stats) return;
-    startNewPrompt();
-  }, [mode, filter, practiceAllFaces, weakLetterFilter, stats]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!timedMode || timerSeconds === null) return;
@@ -261,7 +298,9 @@ export default function CubeTrainer() {
   const recordAttempt = useCallback(
     (letter: string, correct: boolean) => {
       if (!stats) return;
-      const timeMs = Date.now() - promptStartRef.current;
+      const now = Date.now();
+      if (promptStartRef.current === 0) promptStartRef.current = now;
+      const timeMs = now - promptStartRef.current;
       roundLettersRef.current.push(letter);
       if (!roundTimesRef.current[letter]) roundTimesRef.current[letter] = [];
       roundTimesRef.current[letter].push(timeMs);
@@ -443,7 +482,54 @@ export default function CubeTrainer() {
     roundLettersRef.current = [];
     roundTimesRef.current = {};
     if (m === "face-drill") setWeakLetterFilter(null);
-  }, []);
+    if (m !== mode) {
+      const nextWeakLetterFilter =
+        m === "face-drill" ? null : weakLetterFilter;
+      const nextBasePool = filterStickers(filter);
+      const nextPool = nextWeakLetterFilter
+        ? filterStickersByLetters(nextBasePool, nextWeakLetterFilter)
+        : nextBasePool;
+      startNewPrompt(undefined, { mode: m, pool: nextPool });
+    }
+  }, [filter, mode, startNewPrompt, weakLetterFilter]);
+
+  const handleFilterChange = useCallback(
+    (nextFilter: StickerFilter) => {
+      if (nextFilter === filter) return;
+      setFilter(nextFilter);
+      const nextBasePool = filterStickers(nextFilter);
+      const nextPool = weakLetterFilter
+        ? filterStickersByLetters(nextBasePool, weakLetterFilter)
+        : nextBasePool;
+      startNewPrompt(undefined, { pool: nextPool });
+    },
+    [filter, startNewPrompt, weakLetterFilter],
+  );
+
+  const handlePracticeAllFacesChange = useCallback(
+    (nextPracticeAllFaces: boolean) => {
+      if (nextPracticeAllFaces === practiceAllFaces) return;
+      setPracticeAllFaces(nextPracticeAllFaces);
+      startNewPrompt(undefined, {
+        practiceAllFaces: nextPracticeAllFaces,
+      });
+    },
+    [practiceAllFaces, startNewPrompt],
+  );
+
+  const handleDrillFaceChange = useCallback(
+    (face: Face) => {
+      if (face === drillFace) return;
+      setDrillFace(face);
+      startNewPrompt(undefined, { drillFace: face });
+    },
+    [drillFace, startNewPrompt],
+  );
+
+  const handleClearWeakLetterFilter = useCallback(() => {
+    setWeakLetterFilter(null);
+    startNewPrompt(undefined, { pool: basePool });
+  }, [basePool, startNewPrompt]);
 
   const handleToggleLetters = useCallback(() => {
     setShowLettersOverride((prev) => {
@@ -471,11 +557,16 @@ export default function CubeTrainer() {
   }, []);
 
   const handlePracticeWeakLetters = useCallback((letters: string[]) => {
-    setWeakLetterFilter(letters.slice(0, 6));
+    const nextWeakLetterFilter = letters.slice(0, 6);
+    setWeakLetterFilter(nextWeakLetterFilter);
     setMode("find-letter");
     setTimedSummary(null);
     setInputLocked(false);
-  }, []);
+    startNewPrompt(undefined, {
+      mode: "find-letter",
+      pool: filterStickersByLetters(basePool, nextWeakLetterFilter),
+    });
+  }, [basePool, startNewPrompt]);
 
   const dismissSummary = useCallback(() => {
     setTimedSummary(null);
@@ -555,17 +646,6 @@ export default function CubeTrainer() {
 
   const focusFace = mode === "face-drill" ? drillFace : null;
   const lettersOverridden = showLettersOverride !== null;
-
-  if (!stats || !settings) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-muted">
-        <div className="flex flex-col items-center gap-3">
-          <CubeMark className="h-10 w-10 animate-[float-soft_2s_ease-in-out_infinite]" />
-          <span className="text-sm">Loading trainer…</span>
-        </div>
-      </div>
-    );
-  }
 
   const activeMode = MODE_META[mode];
 
@@ -653,7 +733,7 @@ export default function CubeTrainer() {
             </span>
             <button
               type="button"
-              onClick={() => setWeakLetterFilter(null)}
+              onClick={handleClearWeakLetterFilter}
               className="ml-auto min-h-11 rounded-lg border border-line bg-surface-2/60 px-3 py-1.5 text-xs font-semibold text-muted transition-colors hover:text-white"
             >
               Clear filter
@@ -705,7 +785,7 @@ export default function CubeTrainer() {
               </div>
 
               {mode !== "face-drill" && (
-                <FilterBar filter={filter} onChange={setFilter} />
+                <FilterBar filter={filter} onChange={handleFilterChange} />
               )}
 
               {mode === "face-drill" && (
@@ -713,7 +793,9 @@ export default function CubeTrainer() {
                   <input
                     type="checkbox"
                     checked={practiceAllFaces}
-                    onChange={(e) => setPracticeAllFaces(e.target.checked)}
+                    onChange={(e) =>
+                      handlePracticeAllFacesChange(e.target.checked)
+                    }
                     className="h-5 w-5 rounded border-line-strong accent-[var(--brand)]"
                   />
                   Practice all faces (random order)
@@ -782,12 +864,13 @@ export default function CubeTrainer() {
 
                 {mode === "face-drill" && (
                   <FaceDrill
+                    key={drillFace}
                     face={drillFace}
                     practiceAllFaces={practiceAllFaces}
                     onSubmit={handleFaceSubmit}
                     feedback={faceFeedback}
                     disabled={inputLocked}
-                    onFaceChange={setDrillFace}
+                    onFaceChange={handleDrillFaceChange}
                   />
                 )}
 
@@ -840,6 +923,17 @@ export default function CubeTrainer() {
         onClose={() => setSettingsOpen(false)}
         onChange={persistSettings}
       />
+    </div>
+  );
+}
+
+function TrainerLoading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center text-muted">
+      <div className="flex flex-col items-center gap-3">
+        <CubeMark className="h-10 w-10 animate-[float-soft_2s_ease-in-out_infinite]" />
+        <span className="text-sm">Loading trainer…</span>
+      </div>
     </div>
   );
 }

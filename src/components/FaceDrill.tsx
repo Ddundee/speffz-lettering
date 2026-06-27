@@ -55,14 +55,8 @@ export default function FaceDrill({
   ) as Record<StickerPosition, string>;
 
   useEffect(() => {
-    setInputs({
-      "top-left": "",
-      "top-right": "",
-      "bottom-left": "",
-      "bottom-right": "",
-    });
     inputRefs.current["top-left"]?.focus();
-  }, [face]);
+  }, []);
 
   const handleChange = (position: StickerPosition, value: string) => {
     const letter = value.slice(-1).toUpperCase();
