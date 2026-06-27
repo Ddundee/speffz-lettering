@@ -298,7 +298,7 @@ export default function StatsPanel({
   );
 }
 
-const LIGHT_FACES: Face[] = ["U", "D", "L"];
+const LIGHT_FACES: Face[] = ["U", "D", "L", "F"];
 
 function accuracyColor(accuracy: number, hasData: boolean): string {
   if (!hasData) return "text-faint";
